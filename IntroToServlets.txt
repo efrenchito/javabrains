@@ -1,0 +1,332 @@
+Introduction to Servlets
+(https://javabrains.io/courses/javaee_jaxrs/lessons/Introduction)
+  -> Developing RESTful Web Services in Java 
+    (https://www.youtube.com/watch?v=I4Qems9UzuY)
+    (https://jersey.java.net/documentation/latest/index.html)
+
+
+UNIT 01 Getting Started
+    1.1 Setting Up
+      -> Tomcat Setup
+	    Set up Tomcat in your Eclipse development environment to start writing JSP/Servlet applications.
+	    -> Create a New Server for Eclipse
+	        From the Java EE perspective
+	          Select 'Servers' tab
+	          .Add New Server (Tomcat 7) select Tomcat directory installation
+	          .Right click>Properties
+	          .Switch Location To: /Servers/Tomcat v7.0 Server at Localhost.server -> Apply/OK
+	          .Double Click
+	            Server Location:
+	              .Use Tomcat Installation
+	          .start Server
+
+    1.2 First Servlet
+        -> Create a Dinamic Web Project
+          File>New>Web (Dinamic Web Project)
+           .Project Name: SimpleServletProject
+           -> Generate a web.xml deployment descriptor
+           *Windows>Show View>Navigator
+       
+           -> Create an HTML welcome page
+            .../WebContent/index.html
+		        <!DOCTYPE html>
+				<html>
+				<head>
+				<meta charset="ISO-8859-1">
+				<title>Simple Servlet Project</title>
+				</head>
+				<body>
+				Simple Web Application says Hello!
+				</body>
+				</html>
+
+	    -> Create a Servlet
+	      Let's mention that a Servlet is a Java Class that resides in the Tomcat Instance. So Tomcat Instance will run that Class that we've created and it's gonna run on the VM that's on the Server where Tomcat is deployed.
+	      It's analogous to a Standalone Java Class with some diferentiates:
+	        .A Servlet could run in a different Host
+	        .A Servlet doesn't have a main method, but there are some default methods that get executed
+
+	      .File>New>Servlet
+	        .Project Name: SimpleServletProject
+	        .Source Folder: /SimpleServletProject/src
+	        .Package: com.yourcompany
+	        .Class Name: SimpleServlet
+	        .Super Class: javax.servlet.http.HttpServlet
+
+	        ->Servlet deployment descriptor specific.info
+	          .Name: SimpleServlet
+	          .Description: A Simple Servlet
+	          .URL mappings: /SimpleServletOtherPath
+	          >Inherited abstract methods
+	          >doGet
+
+UNIT 02
+    2.1 Servlet XML Configuration
+
+      -> Create Java Class "Servlet" without Annotations
+        .../src/main/java/com.yourcompany.XMLServlet.java
+          package com.yourcompany;
+  
+		  import javax.servlet.http.HttpServlet;
+		  import javax.servlet.http.HttpServletRequest;
+		  import javax.servlet.http.HttpServletResponse;
+		  import javax.servlet.ServletException;
+		  import java.io.IOException;
+		  import java.io.PrintWriter;
+  
+		  public class XMLServlet extends HttpServlet {
+  
+			  private static final long serialVersionUID = 1L;
+  			
+			  @Override
+			  public void doGet(HttpServletRequest request, HttpServletResponse response)
+					            throws ServletException, IOException{
+				  response.setContentType("text/html");
+				  PrintWriter writer = response.getWriter();
+				  writer.println("Hello from GET method ");
+				  System.out.println("Hello from XML Servlet!!!");
+			  }
+  			
+  
+		  }
+
+
+      -> Setup SERVLET in our web.xml
+      web.xml is normally called as the deployment descriptor in a Web Application, what that means is the web.xml contains the information which is required for deploying/running the application.
+        .../WebContent/WEB-INF/web.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+		    <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
+		      <display_name>SimpleServletProject</display_name>
+		      <servlet>
+		        <servlet-name>xmlServlet</servlet-name>
+		        <servlet-class>com.yourcompany.XMLServlet</servlet-class>
+		      </servlet>
+		      <servlet-mapping>
+		        <servlet-name>xmlServlet</servlet-name>
+		        <url-pattern>/xmlServletPath</url-pattern>
+		      </servlet-mapping>
+		    </web-app>
+
+    2.2 The POST Method and Passing Parameters
+      Let's see how to get Parameters:
+      After configure your xml-Servlet, let's obtain a "Query-Param" from GET HttpServletRequest:
+
+      -> Query-Parameter (http//:localhost:8080/SimpleServletProject/xmlServletPath?userName=koushik)
+        .../src/main/java/com.yourcompany.XMLServlet.java
+		  package com.yourcompany;
+  
+		  import javax.servlet.http.HttpServlet;
+		  import javax.servlet.http.HttpServletRequest;
+		  import javax.servlet.http.HttpServletResponse;
+		  import javax.servlet.ServletException;
+		  import java.io.IOException;
+		  import java.io.PrintWriter;
+  
+		  public class XMLServlet extends HttpServlet {
+  
+			  private static final long serialVersionUID = 1L;
+
+			  @Override
+			  public void doGet(HttpServletRequest request, HttpServletResponse response)
+					            throws ServletException, IOException{
+				  response.setContentType("text/html");
+				  PrintWriter writer = response.getWriter();
+				  writer.println("Hello from GET method ");
+				  System.out.println("Hello from XML Servlet!!!");
+			  }
+  
+		  }
+
+      -> POST-Parameter
+        .../WebContent/WEB-INF/SimpleForm.html
+          <html>
+            <form method="post" action="xmlServletPath">
+              User Name:<input type="text" id="userName" /><br/>
+              Full Name:<input type="text" id="userName" /><br/>
+              Profession:
+              <input type="radio" name="prof" value="Developer">Developer</input><br/>
+              <input type="radio" name="prof" value="Architect">Architect</input><br/>
+              <select name="location" multiple size="3">
+                <option value="here">here</option>
+                <option value="there">there</option>
+                <option value="far">far away</option>
+                <option value="near">near</option>
+                <option value="nowhere">nowhere</option>
+              </select>
+              <input type="submit">
+            </form>
+          </html>
+
+        .../src/main/java/com.yourcompany.XMLServlet.java
+		  package com.yourcompany;
+  
+		  import javax.servlet.http.HttpServlet;
+		  import javax.servlet.http.HttpServletRequest;
+		  import javax.servlet.http.HttpServletResponse;
+		  import javax.servlet.ServletException;
+		  import java.io.IOException;
+		  import java.io.PrintWriter;
+  
+		  public class XMLServlet extends HttpServlet {
+  
+			  private static final long serialVersionUID = 1L;
+
+			  @Override
+			  public void doGet(HttpServletRequest request, HttpServletResponse response)
+					            throws ServletException, IOException{
+				  ...
+			  }
+  			
+			  @Override
+			  public void doPost(HttpServletRequest request, HttpServletResponse response)
+			            throws ServletException, IOException{
+				  response.setContentType("text/html");
+				  PrintWriter writer = response.getWriter();
+				  String userName = request.getParameter("userName");
+				  String fullName = request.getParameter("fullName");
+				  String userName = request.getParameter("userName");
+				  writer.println("Hello from POST method: "+userName+"!, we know your full name is: "+fullName);
+				  String prof = request.getParameter("prof");
+				  writer.println("Your profession is: "+prof);
+				  String[] location = request.getParameterValues("location");
+				  writer.println("You're at "+location.length()+" places");
+				  for(int i=0;i<location.length();i++){
+				    writer.println(location[i]);
+				  }
+				  System.out.println("Hello from XML Servlet!!!");
+			  }
+  
+		  }
+
+    2.3 Request, Sessions and Scopes
+      
+      Scopes
+      .We'll look at some important objects and their scopes
+      .Requests and Response objects
+      .Servlet itself is an object
+      .Wher are these objects created and destroyed?
+
+      Server's objects!
+      .Servlet runs in the Tomcat container
+      .Every class we use here that we haven't writtens is provided by the Server
+      .HttpServletRequest and HttpServletResponse implementations
+
+      Object Creation
+      .Request and Response objects - Per access
+      .Servlet object - Not created per access
+      .Different requests have different servlet threads, not instances
+
+      Request Object
+      .HTTP - Stateless protocol
+      .How to make our servlet remember us? Loggin/Shopping Cart
+      .Use HttpSessions
+
+        .../src/main/java/com.yourcompany.XMLServlet.java
+		  package com.yourcompany;
+  
+		  import javax.servlet.http.HttpServlet;
+		  import javax.servlet.http.HttpServletRequest;
+		  import javax.servlet.http.HttpServletResponse;
+		  import javax.servlet.ServletException;
+		  import java.io.IOException;
+		  import java.io.PrintWriter;
+  
+		  public class XMLServlet extends HttpServlet {
+  
+			  private static final long serialVersionUID = 1L;
+
+			  @Override
+			  public void doGet(HttpServletRequest request, HttpServletResponse response)
+					            throws ServletException, IOException{
+				  response.setContentType("text/html");
+				  PrintWriter writer = response.getWriter();
+
+				  String userName = request.getParameter("userName");
+				  HttpSession session = request.getSession();
+				  if(userName != null && userName.trim() != ""){
+					  session.setAttribute("savedUserName", userName);
+				  }
+  				
+				  writer.println("Request parameter has username as: "+userName);
+				  writer.println("Session parameter has username as: "+(String)session.getAttribute("savedUserName"));
+			  }
+  
+		  }
+
+      Session Objects
+      .One per user/machine
+      .Objects available across requests
+      .Perfect for login sessions and shopping carts
+      .Every request object has a handle to the session object
+
+      Context Objects
+      .Accross the entire application
+      .Shared across servlets and users
+      .Initializaion code/Common bulletin board
+
+              .../src/main/java/com.yourcompany.XMLServlet.java
+		  package com.yourcompany;
+  
+		  import javax.servlet.http.HttpServlet;
+		  import javax.servlet.http.HttpServletRequest;
+		  import javax.servlet.http.HttpServletResponse;
+		  import javax.servlet.ServletException;
+		  import java.io.IOException;
+		  import java.io.PrintWriter;
+  
+		  public class XMLServlet extends HttpServlet {
+  
+			  private static final long serialVersionUID = 1L;
+
+			  @Override
+			  public void doGet(HttpServletRequest request, HttpServletResponse response)
+					            throws ServletException, IOException{
+			  	response.setContentType("text/html");
+				PrintWriter writer = response.getWriter();
+				String userName = request.getParameter("userName");
+				
+				HttpSession session = request.getSession();
+				ServletContext context = request.getServletContext();
+				if(userName != null && userName.trim() != ""){
+					session.setAttribute("savedUserName", userName);
+					context.setAttribute("savedUserName", userName);
+				}
+				
+				writer.println("Request parameter has username as: "+userName);
+				writer.println("Session parameter has username as: "+(String)session.getAttribute("savedUserName"));
+				writer.println("Context parameter has username as: "+(String)context.getAttribute("savedUserName"));
+
+			  }
+  
+		  }
+
+    2.4 Understanding init(), service()	 and ServletConfig
+      There are methods which run before the doGet()/doPost():
+      .init()
+      .service()
+      .Inherited methods
+
+      init() and service()
+        When the first call to the server occurred the Servlet Object has not been created yet.
+        So what happens is the Servlet Object is created and the init(ServletConfig) method get's called, now it's ready to handle request's.
+        After that the Service method is called, now the service() method looks at the request and it decides which of the Servlet method's needs to be called.
+
+        .First call to Servlet
+            -> init(ServletConfig)
+                -> service()
+                    .doGet()
+                    .doPost()
+
+        .Subsequent calls to Servlet
+            -> service()
+                .doGet()
+                .doPost()
+
+      Servlet Inheritance
+        .GenericServlet  <- init(ServletConfig)
+                            init()
+                            service()
+            -> HTTPServlet  <-  service()
+                -> MyServlet   <-  doGet()
+                                   doPost()
+

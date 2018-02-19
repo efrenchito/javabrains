@@ -1,0 +1,138 @@
+HIBERNATE
+  What is Hibernate?
+    HIBERNATE -> Is a Java Object Relational Mapping Tool
+    NHibernate -> ORM Tool 4 Microsoft.NET
+    eclipseLink
+    ...
+  Hibernate Configuration
+    //hibernate.cfg.xml
+      <?xml version="1.0" encoding="utf-8"?>
+      <hibernate-configuration>
+        <session-factory>
+        <property name=""></property>
+        connection.driver_class|url|username|password
+        <property name="show_sql">true|false</property>
+        <property name="hbm2ddl.auto">create|update</property>
+        <maping classes="org.javabrains.dto.UserDetails" />
+        </session-factory>
+      </hibernate-configuration>
+      ...
+  Annotations1 (Entity/Table/Id/Column)
+    //UserDetails.java
+      package org.javabrains.dto;
+  
+      import javax.persistence.Entity;
+      import javax.persistence.Table;
+      import javax.persistence.Id;
+      import javax.persistence.Column;
+  
+      @Entity (name="USER_DETAILS")
+      @Table  (name="USER_DETAILS")
+      public class UserDetails{
+        @Id
+        @Column (name="USER_ID") /*Field Declaration Annotation*/
+        private int userId;
+        private String userName;
+        //@Column (name="USER_ID") /*Getter Declaration Annotation*/
+        public int getUserId(){
+        return this.userId;
+        }
+      }
+      ...
+  Annotations2 (Basic/Transient/Temporal/LOB)
+  Save and Get
+    //HibernateTest
+      ...
+        SessionFactory sf = new Configuration().configure().buildSessionFactory();
+        Session s = sf.openSession();
+        s.beginTransaction();
+        s.save(_modelObject_);
+        s.getTransaction().commit();
+        s.close();
+
+        user = null;
+        s = sf.openSession();
+        user = (UserDetails)s.get(UserDetails.class, 1);
+        System.out.println("User Name Retrieved: "+user.getUserName());
+  Primary Keys (GenerationType.Auto|Identity|Sequence|Table)
+    //UserDetails.java
+      ...
+        @Entity
+        public class UserDetails{
+          @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+          private int userId;
+  Value Types & Embedding Objects (@Embeddable/@Embedded)
+    -> Annotations Separate Columns Approach
+      //Address1.java
+        packate org.javabrains.dto;
+        import javax.persistance.Embeddable;
+        @Embeddable
+        public class Address{
+          private String street;
+          private String city;
+          private String state;
+          private String pincode;
+          ...   
+      //UserDetails1.java
+        package org.javabrains.dto;
+        ...
+        import javax.persistence.Embedded;
+        @Entity
+        public class UserDetails{
+          @Id
+          private int userId;
+          private String userName;
+          @Embedded
+          private Address address;
+          ...
+      //HibernateTest1.java
+        package org.javabrains.hibernate;
+        ...
+        public HibernateTest class{  
+          public static void main(String[] args){
+            UserDetails user = new UserDetails();
+            ...
+            Address addr = new Address();
+            addr.setStreet("Street Name");
+            addr.setCity("City Name");
+            
+            user.setAddres(addr);
+        ...
+    -> Column Names for Separate Columns Approach    
+      //Address2.java
+        packate org.javabrains.dto;
+        import javax.persistance.Embeddable;
+        @Embeddable
+        public class Address{
+          @Column (name="STREET_NAME")
+          private String street;
+          @Column (name="CITY_NAME")
+          private String city;
+          @Column (name="STATE_NAME")
+          private String state;
+          @Column (name="PIN_CODE")
+          private String pincode;
+        ...
+      //UserDetails2.java
+        package org.javabrains.dto;
+        ...
+        import javax.persistence.Embedded;
+        import javax.persistence.AttributeOverrides;
+        import javax.persistence.AttributeOverride;
+        @Entity
+        public class UserDetails{
+          @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+          private int userId;
+          private String userName;
+          @Embedded
+          @AttributeOverrides({
+             @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME"))
+            ,@AttributeOverride(name="city",   column=@Column(name="HOME_CITY_NAME"))
+            ,@AttributeOverride(name="state",  column=@Column(name="HOME_STATE_NAME"))
+            ,@AttributeOverride(name="pincode",column=@Column(name="HOME_PIN_CODE_NAME"))
+          })
+          private Address homeAddress;
+          @Embedded
+          private Address officeAddress;
+        ...
+      //

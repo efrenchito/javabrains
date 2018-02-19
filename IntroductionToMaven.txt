@@ -1,0 +1,344 @@
+MAVEN
+ .Build tool
+ .Project management tool
+
+@UNIT 01 Introduction
+1 Introduction and Setting up
+    Common Problems and Activities
+      .Multiple jars
+      .Dependencies and versions
+      .Project structure
+      .Building, publishing and deploying
+
+    -> Download Maven
+        http://maven.apache.org/  
+        Download Binary zip archive (Currently V.3.3.9)
+
+    -> Setup Environment Variables
+        .Ensure JAVA_HOME environment variable is set and points to your JDK installation
+          echo %JAVA_HOME%
+          C:\Program Files\Java\jdk1.7.0_51
+        .unzip apache-maven-3.3.9-bin.zip to C:\Program Files\
+        .Add C:\Program Files\apache-maven-3.3.9\bin to PATH
+        .Verify Maven is Installed:
+          - Open a new command prompt (Winkey + R then type cmd) and run mvn -v to verify the installation
+
+    -> Create a Maven Project(Simple Java Application)
+    https://maven.apache.org/plugins-archives/maven-archetype-plugin-1.0-alpha-7/examples/simple.html
+        An archetype is like the model as how you want your project to be structured.
+        
+
+        ...
+        $mkdir testapp
+        $cd testapp/
+        $mvn archetype:generate -DgroupId=	 -DartifactId=helloWorldApp -DarchetypeArtifactId=maven-archetype-quickstart -Dversion=1.0-SNAPSHOT
+
+          groupId: com.yourcompany   -> It's like the namespace for your project
+          artifactId: helloWorldApp  -> It's like your project name
+          version: 1.0-SNAPSHOT
+          package: com.yourcompany
+
+	-> Compile
+	  ...
+		$cd testapp/helloWorldApp
+		$mvn compile
+
+	-> Packaging
+	  ...
+	    $mvn package	    
+
+	-> Running
+	  ...
+	    $java -cp target/helloWorldApp-1.0-SNAPSHOT.jar com.yourcompany.App
+
+	-> What Maven has done for us?
+	  +Maven Repository
+	    -Archetype Info: Has details about different types of project that you can create/folder structure/all the required information about creating a new project of a particular type
+	    -Dependency Info: A list of all the .jar files you normally use, and the other .jar files that depends on
+
+	  +Dev Environment
+	    -Maven:
+	    +Directory Structure:
+	      -pom.xml (Project Object Model)
+	      -jars
+
+@UNIT 02 Maven Concepts
+2 Understanding Archetypes and pom.xml
+  .Project Template
+  .Build
+
+  +Project Template
+    Folder Structure
+    pom.xml
+
+    -> archetype:generate
+      .Archetype: Kind of application that you want to develop (Java EE/Spring/Hibernate)
+        Layout of the files, Folder structure and dependencies
+      .Group ID: Directory Structure on Maven
+      .Artifact ID: Project Name
+        -> Group ID/Artifact ID let's define the name of the output of our project 	
+      .Version: 1.x to 10.x
+      Package: What package that class should belong to
+
+    -> pom.xml (Project Object Model)
+      Specifies the Project definition and dependencies details.
+        .Maven co-ordinates
+        .Metadata
+        .Build information
+        .Resources and dependencies
+
+3 Maven Build Phases
+  .Build lifecycle
+  .Consists of phases
+  .Default behavior of phases
+
+    -> Some Phases
+      .Validate -> Checks that everything is in order/place
+      .Compile  -> Takes all the .java files and convet it to .class
+      .Test     -> Where we run the test cases
+      .Package  -> Generate the artifact (.jar|war|ear)
+      .Install  -> Installs the artifact into a local Maven Repository
+      .Deploy   -> Publishing the artifact to a Remote repository
+      *Some phases automatically calls previous phases
+
+    -> Running Phases
+      1. $cd to directory where our pom.xml is placed
+        ...
+          $mvn compile
+          $mvn test
+          $mvn package
+          $mvn install
+
+4 Adding a Dependency
+  ...//Modify the src/main/java/com.yourcompany.App class 
+    package com.yourcompany;
+
+	import org.slf4j.*;
+	/**
+	 * Hello world!
+	 *
+	 */
+	public class App 
+	{
+	    public static void main( String[] args )
+	    {
+	        //System.out.println( "Hello World!" );
+	        Logger logger = LoggerFactory.getLogger(App.class);
+	        logger.info("Hello, World!!!");
+	    }
+	}
+
+  ...//Add the dependency 'sl4j API' into your pom.xml
+      -> search 'sl4j API' in https://mvnrepository.com 
+
+      ...
+      <dependency>
+	    <groupId>org.slf4j</groupId>
+	    <artifactId>slf4j-api</artifactId>
+	    <version>1.7.22</version>
+	  </dependency>
+	  ...
+	  
+	  Since we've not specified scope default value is:
+	    <scope>compile</scope>
+
+5 A Web Application Using Maven
+
+    -> Create a Maven Project (Webapp) 
+    https://maven.apache.org/plugins-archives/maven-archetype-plugin-1.0-alpha-7/examples/webapp.html
+    
+      $mkdir testwebapp
+      $cd testwebapp
+      $mvn archetype:generate -DgroupId=com.yourcompany -DartifactId=myWebApp -DarchetypeArtifactId=maven-archetype-webapp -Dversion=1.0-SNAPSHOT
+
+    -> Examine the pom.xml
+    + <packaging>
+        <packaging>war</packaging> -> Since we have a Web Application now is a 'war'
+
+        ...
+        <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+		  <modelVersion>4.0.0</modelVersion>
+		  <groupId>com.yourcompany</groupId>
+		  <artifactId>myWebApp</artifactId>
+		  <packaging>war</packaging>
+		  <version>1.0-SNAPSHOT</version>
+		...
+
+ 	+ <dependencies>
+ 	    .javax.servlet     -> servlet-api
+ 	    .javax.servlet.jsp -> jsp-api
+ 	    .junit             -> For running test cases
+
+ 	    ...
+ 	      <name>myWebApp Maven Webapp</name>
+		  <url>http://maven.apache.org</url>
+		  
+		  <dependencies>
+		    <dependency>
+		      <groupId>javax.servlet</groupId>
+		      <artifactId>servlet-api</artifactId>
+		      <version>2.4</version>
+		      <scope>provided</scope>
+		    </dependency>
+		    <dependency>
+		      <groupId>javax.servlet.jsp</groupId>
+		      <artifactId>jsp-api</artifactId>
+		      <version>2.1</version>
+		      <scope>provided</scope>
+		    </dependency>
+		...
+
+ 	+ <build>
+ 	    .plugin  -> The compiler plugin configuration
+
+ 	    ...
+		 	     </dependencies>
+		  
+		  <build>
+		    <finalName>myWebApp</finalName>
+		    <plugins>
+		      <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-compiler-plugin</artifactId>
+		        <version>2.0.2</version>
+		        <configuration>
+		          <source>1.4</source>
+		          <target>1.4</target>
+		        </configuration>
+		      </plugin>  
+		    </plugins>
+		  </build>
+		</project>
+
+ 	-> Compile
+ 	  $cd myWebApp
+ 	  $mvn compile
+ 	  $mvn package
+
+ 	-> Package
+ 	  $mvn package
+
+    -> Deploy
+      After Install 'Apache Tomcat 8.5'
+      Go to http://localhost:8080/
+        -> Manager App
+        Desplegar>Archivo WAR a desplegar
+          Seleccione archivo WAR
+          -> Desplegar
+
+@UNIT 03 MAVEN PLUGINS
+6 Introduction to Plugins with the Maven Compiler Plugin
+  
+  -> Create a src/main/java/com.yourcompany.MyClass.java 
+	...
+	package
+
+	import java.util.*
+
+	public class MyClass{
+	  public static void main(String[] args){
+	    List<String> stringList = new ArrayList<String>();
+	  }
+	}
+
+  -> Try to compile
+    $mvn -e compile
+      generics are not supported in -source 1.4
+     
+  -> Edit pom.xml file
+    ...
+	    <build>
+	    <finalName>myWebApp</finalName>
+	    <plugins>
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>2.0.2</version>
+	        <configuration>
+	          <source>1.5</source>
+	          <target>1.5</target>
+	        </configuration>
+	      </plugin>  
+	    </plugins>
+	  </build>
+
+	</project>
+
+7 Using the Jetty Plugin
+  -> Modify the pom.xml file
+    ...
+      </dependencies>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>maven-jetty-plugin</artifactId>
+            <version>6.1.10</version>
+            <configuration>
+              <scanIntervalSeconds>60</scanIntervalSeconds>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+
+    </project>
+
+  -> Run the command
+    $dir
+      pom.xml   src   target
+    $mvn jetty:run
+
+8 Eclipse Plugin for Maven and Maven Plugin for Eclipse
+
+  -> Eclipse Plugin for Maven
+    Let's convert 'myWebApp' to an Eclipse project
+    $cd ../myWebApp
+    $dir
+      pom.xml src target
+    $mvn eclipse:eclipse
+      => This will add .classpath/.project files in order to set the Maven project as an Eclipse project.
+
+  -> Open Maven->Elipse project from Eclipse
+    File>Import
+      General>Existing Projects into Workspace
+      .Select root directory: ..\myWebApp
+      .Projects: myWebApp(..\myWebApp)
+      Click on Finish
+
+  -> In some cases .jar files are not linked successfully
+    myWebApp< Properties
+      Java Build Path/Libraries
+
+    Watch how there are some jar's linked to a variable M2_REPO
+    This variable is linked to C:\Users\GsgPC-19\.m2\repository
+    In case this variable it's mpt defined  add it through Add variable option.
+      New variable Entry
+        Name: M2_REPO
+        Path: C:\Users\GsgPC-19\.m2\repository
+
+  Install Maven Plugin for Eclipse  (M2Eclipse)
+   -> Help/Install New software
+
+9 
+  -> Create New Maven Project from Eclipse
+  File>New>Others
+    Maven>Maven Project
+      New Maven project
+        Catalog: All Catalogs
+        Filter:  webapp
+          .Group Id: org.apache.maven.archetypes 
+          .Artifact Id: maven-archetype-webapp
+          .Version: RELEASE
+        Click on New
+
+        - Group Id: com.yourcompany
+        - Artifact Id: myWebAppEclipse
+        - Version: 0.0.1-SNAPSHOT
+        - Package: com.yourcompany.myWebAppEclipse
+
+        Click on Finish
+
+
+          

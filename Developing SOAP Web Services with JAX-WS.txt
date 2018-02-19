@@ -1,0 +1,488 @@
+Developing SOAP Web Services with JAX-WS
+.https://javabrains.io/courses/javaee_jaxws/lessons/Introduction-to-Web-Services
+  -> SOAP Web Services Basics
+    .https://www.youtube.com/watch?v=mKjvKPlb1rA&list=PLqq-6Pq4lTTZTYpk_1DOowOGWJMIH5T39
+    .https://www.w3.org/TR/wsdl
+    .http://www.w3schools.com/xml/xml_services.asp
+    .http://www.w3schools.com/xml/default.asp
+
+Unit 01 Introduction
+    1.1 Introduction to Web Services
+        Web Services: SOAP (JAX-WS) vs REST (JAX-RS)
+        Web Services: Are services that are exposed to the Internet. ONLine APIs
+
+    1.2 Web Service Jargon
+
+        WSDL Web Service Description Language
+          - It's a document which describes a Web Service in an XML format that different technologies can understand.
+        
+        UDDI Universal Description Discovery & Integration
+          - It's a directory where any publisher can publish the web services and consumers can query this directory and get access to all different Web Services.
+
+        SOAP Simple Object Application Protocol
+          - It's a language/format again XML format that it's used to encode and decode different messages.
+
+        SEI  Service EndPoint Interface
+          - It's an Interface to the Service end-point. Is an Interface to the Web Service that provides a way for your client application to call the Web Service
+
+    1.3 Writing a Web service Client - Stub generation
+        -> Create a Java Project
+          .File>New Project>Java
+          .Project Name: IPLocationFinder
+          .Execution environment: JavaSE-1.7
+
+        -> Create a Java Class
+          .File>New>Java Class
+          .Source Folder: IPLocationFinder/src
+          .Package: com.yourcompany
+          .Name: IPLocationFinder
+          .public static void main(String[] args)
+
+        -> Access http://www.webservicex.net/
+        
+        -> Using wsimport <Java API for XML Web Services (JAX-WS) 2.0>
+          .open a cmd console (W+run>cmd)
+            $C:\> cd Z:\Oracle\JavaPractice\SOAP
+            $C:\> mkdir sei
+            $C_\> cd sei
+            $C:\> wsimport http://www.webservicex.net/geoipservice.asmx?WSDL
+            $C:\> mkdir src
+            $C:\> wsimport -keep -s src http://www.webservicex.net/geoipservice.asmx?WSDL
+
+        -> Import src files into your project
+          .Right click New Java Package
+            Source folder: net.webservicex
+            Name: net.webservicex
+
+          .Right click Import>Existing Projects into Workspace  
+
+
+        -> Create Client Java Class
+            .../src/com.yourcompany.IPLocationFinder.java
+          	  package com.yourcompany;
+  
+			  import net.webservicex.GeoIP;
+			  import net.webservicex.GeoIPService;
+			  import net.webservicex.GeoIPServiceSoap;
+  
+			  public class IPLocationFinder {
+  
+				  public static void main(String[] args) {
+					  if(args.length != 1){
+						  System.out.println("You need to pass in one IP address");
+					  }else{
+						  String ipAddress = args[0];
+						  System.out.println("ipAddress: "+ipAddress);
+  						
+						  GeoIPService ipService = new GeoIPService();
+						  GeoIPServiceSoap geoIPServiceSoap = ipService.getGeoIPServiceSoap();
+						  GeoIP geoIP = geoIPServiceSoap.getGeoIP(ipAddress);
+						  System.out.println(geoIP.getCountryName());
+  
+					  }
+  
+				  }
+  
+			  }
+
+Unit 02 Building JAX-WS services
+    2.1 Implementing a Web Service
+      File>New Project>Java 
+        -> Look for approaches within Tomcat vs Glassfish vs JBoss vs WebLogic vs Apex
+
+    2.2 Service First and Contract First Web Services
+      .http://docs.spring.io/spring-ws/site/reference/html/why-contract-first.html  
+      In this lesson, we've discussed the two common methodologies for designing and writing web services.
+       - the service first (code first/contract last)
+       - the contract first (or WSDL first) approaches
+       ...
+
+    2.3 Understanding the WSDL
+    	.../..WSDL.xml
+        <definitions targetNamespace="http://www.testmart.com" name="TestMartCatalogService">
+            <!-- targetNameSpace: ensures that all the types defined in this WSDL are isolated to our package -->
+          <types></types>
+          <message></message>
+          <portType></portType>
+          <binding name="TestMartCatalogPortBinding" type="tns:TestMartCatalog">
+            <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+            <operation name="fetchCategories">
+              <soap:operation soapAction="fetch_categories"/>
+              <input>...</input>
+              <output>...</output>
+          </binding>
+          <service></service>
+        </definitions>
+
+    2.4 Customizing the WSDL
+        /src/com.yourcompany.ProductCatalog.java
+          package com.yourcompany;
+
+          import javax.ws.WebService;
+
+          @WebService(name="TestMartCatalog", portName="TestMartCatalogPort"
+                    , serviceName="TestMartCatalogService", targetNameSpace="http://www.testmart.com")
+          public class ProductCatalog {
+
+              ProductServiceImpl productService = new ProductServiceImpl();
+
+              @WebMethod(action=fetch_categories, operationName="fetchCategories")
+              public List<String> getProductCategories() {
+                return productService.getProductCategories();
+              }
+
+              @WebMethod(exclude=true)
+              public List<String> getProducts(String category) {
+                return productService.getProducts(category);
+              }
+
+              @WebMethod(exclude=true)
+              public boolean addProduct(String category, String product) {
+              	return productService.add(category, product);
+              }
+          }
+
+    2.5 Schema types and Binding Styles
+        Let's create a new WebService (Just a POJO <Java Class with respective annotations>)
+        -> Create a Java Class
+        .File>New>Java Class
+        .Source Folder: Testmart/src
+        .Package: com.yourcompany
+        .Name: ShopInfo
+
+        /src/com.yourcompany.ShopInfo.java
+          package com.yourcompany;
+
+          import javax.jws.WebService;
+          import javax.jws.WebMethod;
+
+          @WebService
+          public class ShopInfo {
+
+            public String getShopInfo(String property) {
+              String response = "Invalid property";
+
+              if("shopName".equals(property)) {
+                response = "Test Mart";
+
+              }else if ("since".equals(property)) {
+                response = "since 2012";
+
+              }
+              return response;
+
+            }
+          }
+
+        Let's see the default WSDL generated:
+        /localhost:8080/Testmart/ShopInfoService?wsdl
+          <definitions targetNamespace="http://yourcompany.com/" name="ShopInfoService" >
+            <types>
+              <xsd:schema>
+                <xsd:import namespace="http://yourcompany.com/" schemaLocation="http://localhost:8080/Testmart/ShopInfoService?xsd=1" />
+              </xsd:schema>
+            </types>
+            <message name="getShopInfo">
+              <part name="parameters" element="tns:getShopInfo" />
+            </message>
+            <message name="getShopInfoResponse">
+              <part name="parameters" element="tns:getShopInfoResponse" />
+            </message>
+            <portType name="ShopInfo">
+              <operation name="getShopInfo">
+                <input wsam:Action="http://yourcompany.com/ShopInfo/getShopInfoRequest" message="tns:getShopInfo"/>
+                <output wsam:Action="http://yourcompany.com/ShopInfo/getShopInfoResponse" message="tns:getShopInfoResponse"/>
+              </operation>
+            </portType>
+            <bingind name="ShopInfoPortBinding" type="tns:ShopInfo">
+              <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+              <operation name="getShopInfo">
+                <soap:operation soapAction=""/>
+                ...
+            ...
+
+        If we check the schemaLocation for the types tag:
+        /localhost:8080/Testmart/ShopInfoService?xsd=1
+          <xs:schema version="1.0" targetNameSpace="http://yourcompany.com/">
+            <xs:element name="getShopInfo" type="tns:getShopInfo"/>
+            <xs:element name="getShopInfoResponse" type="tns:getShopInfoResponse"/>
+            <xs:complexType name="getShopInfo">
+              <xs:sequence>
+                <xs:element name="arg0" type="xs:string" minOccurs="0"/>
+              </xs:sequence>
+            </xs:complexType>
+            <xs:complexType name="getShopInfoResponse">
+              <xs:sequence>
+                <xs:element name="return" type="xs:string" minOccurs="0"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:shcema>
+
+        We just need a String as an Input and a String as an Output, so is there a way to simplify this and is overriding what happen by default.
+        Using the @SoapBinding annotation which recives the DOCUMENT and RPC style.
+        .The DOCUMENT style is the default SOAP binding. Use the annotation to change to the RPC style
+        .When RPC style is used, no schema gets generated for types.
+        To specify the param names use @WebParam and @WebResult annotations (arg0 -> lookupInput/ result -> lookupOutput)
+        
+        /src/com.yourcompany.ShopInfo.java
+          package com.yourcompany;
+
+          import javax.jws.WebService;
+          import javax.jws.WebMethod;
+          import javax.jws.soap.SOAPBinding;
+          import javax.jws.soap.SOAPBinding.Style;
+          import javax.jws.WebParam;
+
+          @WebService
+          @SOAPBinding(style=Style.RPC)
+          public class ShopInfo {
+
+            @WebMethod
+            @WebResult(partName="lookupOutput")
+            public String getShopInfo(@WebParam(partName="lookupInput") String property) {
+              String response = "Invalid property";
+              if("shopName".equals(property)) {
+                response = "Test Mart";
+              }
+              else if ("since".equals(property)) {
+                response = "since 2012";
+              }
+              return response;
+            }
+          }
+
+        /localhost:8080/Testmart/ShopInfoService?wsdl
+          <definitions targetNamespace="http://yourcompany.com/" name="ShopInfoService" >
+            <types/>
+            <message name="getShopInfo">
+              <part name="lookupInput" type="xsd:string"/>
+              <!-- <part name="arg0" type="xsd:string"/> -->
+            </message>
+            <message name="getShopInfoResponse">
+              <part name="lookupOutput" type="xsd:string"/>
+              <!-- <part name="return" type="xsd:string"/> -->
+            </message>
+            <portType name="ShopInfo">
+              <operation name="getShopInfo">
+                <input wsam:Action="http://yourcompany.com/ShopInfo/getShopInfoRequest" message="tns:getShopInfo"/>
+                <output wsam:Action="http://yourcompany.com/ShopInfo/getShopInfoResponse" message="tns:getShopInfoResponse"/>
+              </operation>
+            </portType>
+            <bingind name="ShopInfoPortBinding" type="tns:ShopInfo">
+              <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="rpc"/>
+              <operation name="getShopInfo">
+                <soap:operation soapAction=""/>
+                <input>
+                  <soap:body use="literal" namespace="http://yourcompany.com/">
+                </input>
+                <output>
+                  <soap:body use="literal" namespace="http://yourcompany.com/">
+                </output>
+              </operation>  
+            </binding>
+            <service name="ShopInfoService">
+              <port name="ShopInfoPort" binding="tns:ShopInfoPortBinding"> 
+                <soap:address location="http://localhost:8080/Testmart/ShopInfoService"/>
+              </port>
+          ...
+
+        Now that you knwo you can implement DOCUMENT/RPC style's on your SOAP Binding:
+          1.Which one should you use and when?
+          2.If RPC is so easy to read and well laid out why don't we use it all the time?
+
+          -> The reason DOCUMENT style it's used by default is because with that XSD generated you can actually validate it, but you loose that advantage when you are using RPC.
+
+    2.6 Service Interface and Custom Types
+      File>New>Java Class
+      .Source folder: Testmart/src
+      .Package: com.yourcompany.model
+      .Name: Product
+
+        + Create a new 'Complex' Type:
+        /src/com.yourcompany.model.Product.java
+          package com.yourcompany.model;
+
+          public class Product {
+
+            private String name;
+            private String sku;
+            private double price;
+
+            Product(String name, String sku, double price) {
+              this.name = name;
+              this.sku = sku;
+              this.price = price;
+            }
+
+            //left click>source>Generate Getters & Setters
+          }
+
+        + Add getProductsv2 to the WebService returning the 'Complex' Type:
+        /src/com.yourcompany.business.ProductServiceImpl.java
+          package com.yourcompany.business;
+
+          public class ProductServiceImpl {
+
+            List<String> bookList = new ArrayList<>();
+            List<String> musicList = new ArrayList<>();
+            List<Strign> movieList = new ArrayList<>();
+
+            public ProductServiceImpl() {
+              bookList.add("Inferno");
+              bookList.add("Joyland");
+              bookList.add("The game of Thrones");
+
+              musicList.add("Random access Memories");
+              musicList.add("Night Visions");
+              musicList.add("Unorthodox Jukebox");
+
+              movieList.add("Oz the great and powerful");
+              movieList.add("Despicable Me");
+              movieList.add("Star Trek into the Darkness");
+            }
+
+            //getCategories()
+            public List<String> getProductCategories(){  
+              List<String> categories = new ArrayList<>();
+              categories.add("Books");
+              categories.add("Music");
+              categories.add("Movies");
+              return categories;
+            }
+
+            public List<String> getProducts(String category) {
+              switch(category.toLowerCase()){
+                case "books":
+                  return bookList;
+                case "music":
+                  return musicList;
+                case "movies":
+                  return movieList;
+              }
+              return null;
+            }
+
+            public boolean addProduct(String category, String product) {
+              switch(category.toLowerCase()){
+                case "books":
+                  bookList.add(product);
+                case "music":
+                  musicList.add(product);
+                case "movies":
+                  movieList.add(product);
+                default:
+                  return false;
+              }
+              return true;
+            }
+
+            public List<Product> getProductsv2() {
+              List<Product> productList = new ArrayList<>();
+              productList.add(new Product("Java Brains Book", "1234", 99999.99));
+              productList.add(new Product("Another Book", "ABC", 12.50));
+              return productList;
+            }
+
+          }
+
+        Now, I have this service as a Class <see 2.4 ProductCatalog.java>
+        A web service class should implement an interface and that interface should have the respective annotations
+
+        /src/com.yourcompany.ProductCatalog.java
+          @WebService(endpointInterface="org.koushik.javabrains.ProductCatalogInterface", portName="TestMartCatalogPort", serviceName="TestMartCatalogService")
+          public class ProductCatalog implements ProductCatalogInterface {
+          ...
+
+        /src/com.yourcompany.ProductCatalogInterface.java
+          package org.koushik.javabrains;
+
+          import java.util.List;
+
+          import javax.jws.WebMethod;
+          import javax.jws.WebResult;
+          import javax.jws.WebService;
+
+          import org.koushik.javabrains.model.Product;
+
+          @WebService(name="TestMartCatalog",  
+          targetNamespace="http://www.testmart.com")
+          public interface ProductCatalogInterface {
+
+            @WebMethod(action="fetch_categories", operationName="fetchCategories")
+            public abstract List<String> getProductCategories();
+
+            @WebMethod
+            public abstract List<String> getProducts(String category);
+
+            @WebMethod
+            public abstract boolean addProduct(String category, String product);
+
+            @WebMethod
+            @WebResult(name="Product")
+            public abstract List<Product> getProductsv2(String category);
+
+          }
+
+    2.7 Using JAXB Annotations
+      The JAXB (Java Architecture for XML Binding) allow us to specify detailed the XML structure to implement from a Class
+      Let's see this example from Product Java Class.
+
+        /src/com.yourcompany.Product.java
+          package org.koushik.javabrains.model;
+
+          import javax.xml.bind.annotation.XmlElement;
+          import javax.xml.bind.annotation.XmlRootElement;
+          import javax.xml.bind.annotation.XmlType;
+
+
+          @XmlRootElement(name="Product")
+          @XmlType(propOrder={"price", "sku", "name"} )
+          public class Product {
+
+            private String name;
+            private String sku;
+            private double price;
+            
+            
+            public Product() {
+              
+            }
+            
+            public Product(String name, String sku, double price) {
+              this.name = name;
+              this.price = price;
+              this.sku = sku;
+            }
+            
+            @XmlElement(name="ProductName")
+            public String getName() {
+              return name;
+            }
+            public void setName(String name) {
+              this.name = name;
+            }
+            public String getSku() {
+              return sku;
+            }
+            public void setSku(String sku) {
+              this.sku = sku;
+            }
+            public double getPrice() {
+              return price;
+            }
+            public void setPrice(double price) {
+              this.price = price;
+            }
+
+          }
+
+        /src/com.yourcompany.ProductInterface.java
+          ...
+            @WebMethod
+            @WebResult(name="Product")
+            public abstract List<Product> getProductsv2(String category);
+
+          }
+
+      -> JAXB does XML to Java object conversion too!
+      Which is why it needs a no-args constructor -it'll need to instantiate the object first.

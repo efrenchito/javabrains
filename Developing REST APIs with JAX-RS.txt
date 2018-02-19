@@ -1,0 +1,1512 @@
+Developing REST APIs with JAX-RS
+(https://javabrains.io/courses/javaee_jaxrs/lessons/Introduction)
+  -> Developing RESTful Web Services in Java 
+    (https://www.youtube.com/watch?v=I4Qems9UzuY)
+    (https://jersey.java.net/documentation/latest/index.html)
+
+Course Sections
+> Section 1. REST API concepts
+  -> Messenger: A social media application API
+	1 Introduction
+	  Web Services: Are services that are exposed to the Internet. ONLine APIs
+	  Facebook/Twitter/Instagram published services that let to others developers call them from their code.
+
+	  https://www.twitter.com -> HTML
+	  https://api.twitter.com -> XML/JSON
+
+	  Web Service Types
+	    REST Web Services: Modern, lightweight
+	    SOAP Web Services  ...
+
+	  Characteristics
+	    Web -> HTTP
+	    HTTP exchange: HTTP Request/Response
+	    <html>...</html> <- [CLIENT] <-(Data) [WEB SERVICES]
+
+	  Protocol
+	     Client -> Server
+	     For SOAP -> SOAP
+	         REST -> ? (XML/JSON/text)
+
+	2 REST and HTTP
+	  The concepts of REST are very closely linked with HTTP. 
+	  REST is inspired by a lot of the concepts of HTTP. Roy Fielding, the one who coined the term, is one of the principal authors of the HTTP specification.
+
+	  Understanding HTTP
+	    HTTP stands for Hyper Text Transfer Protocol.
+	    The stuff you exchange and transfer in HTTP is called hypertext.
+	    Hypertext is a structured form of text that has one interesting property: it contains logical links to other text. These links are called hyperlinks.
+	    A common and popular way to write hypertext is using a language called HyperText Markup Language, or HTML.
+
+	  Resource locations
+	    REST APIs have URIs and addresses too.
+	    Since APIs have addresses, an API designer or web service developer needs to decide what the addresses should be. The practice in RESTful APIs is to have resource based addresses.
+
+	  HTTP Methods 
+	    (GET|POST|PUT|DELETE)
+
+	  Metadata
+	    HTTP also defines status codes and response headers which lets the server send back extra information or metadata that might be useful to the client.
+	    One useful piece of information that every response has is the status code:  
+	      HTTP response is successful, a 200
+	      500 - If there is an error on the server
+	      404 - Trying to access something that does not exist
+
+	  Content types
+	    A header value called Content-Type specify either to the "Server/Client" the format of the data XML/JSON/text...
+	    What’s really interesting is that the same API can send back data in multiple different formats, and the actual format it chooses depends on what the client wants.
+
+	  SUMMARY***
+	    . Resource based URLs
+	    . HTTP Methods
+	    . HTTP Status codes
+	    . Message Headers
+
+	> [:::TEST REST APIs Lesson:::]
+	  2T.1 What does REST stand for?
+	  2T.2 Which HTTP method client would you use to make the client  request data from the server?
+	  2T.3 Which one of these HTTP methods would you use to make the client submit data to the server?
+	  2T.4 Let's say you handle a request in your web service and there is an error while you process it on the server. Which status code would you return?
+	  2T.5 XML MIME type?
+	  2T.6 JSON MIME type?
+
+	3 Designing Resource URIs
+	    Messenger
+	     .Post messages
+	     .Commenst on messages
+	     .Like and share messages
+	     .User profiles
+
+	      [User/Message/Comment/Like/Share]
+
+	  Resource based URIs
+	    .Nouns not Verbs
+	    .Plural Nouns
+	      /profiles/{profileName}
+	      /messages/{messageId}
+
+	    For Comment ID 5 -> /comments/5
+	                        /comments/{commentId}
+	    This is correct but there is something more we can do
+	      -> Resource relations
+
+	      Think kind of static content:
+	        messages
+	          1
+	            1.html
+	            comments
+	              1.html
+	              2.html
+	              3.html
+	          2
+	            2.html
+	            comments
+	              4.html
+	              5.html
+
+	     => With this approach
+	        For Comment ID 20 -> /messages/1/comments/5
+	                             /messages/{messageId}/comments/{commentId}
+
+	        But you need to be aware of that in this approach the client needs to know the messageId aswell
+
+	        /profiles/{profileId}
+	        /messages/{messageId} *
+	 		::::::::::::::::::::::::::::::::::::::::::
+	        /messages/{messageId}/comments/{commentId}
+	        /messages/{messageId}/likes/{likeId}
+	        /messages/{messageId}/shares/{shareId}
+
+	        *even thought a message is created by a profile I Liked most this way
+
+	> [:::TEST Resource URIs:::]
+	  3T.1 Let's say you need to build RESTful URIs for various resources in an online shopping site. Say you have Category as an entity that represents all the product categories on the site. What would be a RESTful URI to lookup a category with ID categoryId?
+	  3T.2 The site also has a Product entity. This has been designed to be a first level entity like Category. What would be a good RESTful URI for a product with ID 25?
+	  3T.3 ?If the Product entity were to have been designed as a sub-resource under the Category entity, what would the URI for Product be?
+
+	4 REST URIs types
+	  
+	  URIs Types
+		Instance URI vs Collection URI
+		Think of collection as accesing top level directory
+		/messages returns all messages /profiles returns all profiles /messages/{messageId}/comments returns all comments for messageId
+
+		How about all comments?
+		/messages/{messageId}/comments -> Will not Work!
+		/comments -> Would have worked
+		...But, how about all comments for specific message?
+
+	  Filtering Results
+	    /messages?offset=30&limit=10
+	    /messages?year=2014
+	    /messages?year=2014&offset=50&limit=25
+	    
+	> [:::TEST REST URIs Types:::]
+	  4.1Let's say you have Category as an entity that represents all the product categories on the site. What would be a RESTful URI to look up all categories?
+	  4.2 The site also has a Product entity. This has been designed to be a first level entity like Category. What would be a good RESTful URI for all products?
+	  4.3 If the Product entity were to have been designed as a sub-resource under the Category entity, what would the URI for Product be?
+
+	5 HTTP Methods
+	  If you want your API client to perform different operations for message 10, just have them use different HTTP methods to the same URI /messages/10!
+	  The most common HTTP methods are: GET/POST/PUT/DELETE.
+	  There are some other methods that are rarely used like HEAD and OPTIONS. But for the most part, we'll focus on the 4 common HTTP methods in this course.
+
+	    /getProducts.do?id=10  vs [GET]/products/10
+	    /deleteOrder.do?id=23  vs [DELETE]/orders/23
+	    /updatePerson.do?id=05 vs [PUT]/persons/05
+	      -> When Creating an entity the request is made to the collection
+	      [POST]/messages
+
+	  Collection URI scenarios
+	   [GET]/messages                -> gets*all*messages
+	   [DELETE]/messages/10/comments -> delete*all*comments of message 10
+	   [GET]/messages/10/comments    -> gets*all*comments of message 10
+	   [POST]/messages/10/comments   -> creates a new comment for message 10
+	   [PUT]/messages/20/comments    -> replaces all comments for message 20 with a new list
+
+	> [:::TEST HTTP Methods:::]
+	  5.1 Your API has a Product entity. This has been designed to be a first level entity. What would be a good RESTful URI for all products?
+	  5.2 Which of these is a good choice for deleting a Product instance?
+	  5.3 Which of these is a good choice for updating a Product instance?
+	  5.4 Which of these is a good choice for creating a new Product?
+
+	6 Idempotence In HTTP Methods
+	  Idempotence is the property of certain operations in mathematics and computer science, that can be applied multiple times without changing the result beyond the initial application.
+
+	  Method classification
+	    There are two ways in which we can classify these 4 popular HTTP methods: GET, PUT, POST and DELETE. The GET method is a read-only method; it lets you read information. But the methods PUT, POST and DELETE are write methods; they change something on the server. 
+
+	    The HTTP specification requires GET, PUT and DELETE methods to always be idempotent. If a client makes a request with one of these methods, they do not have to worry about making duplicate requests. But if they are making a POST request, they cannot safely make duplicate requests without any side effects.
+
+	7 REST Response
+	  -> Message Entity
+	    public class MessageEntity{
+	      private long id;
+	      private String message;
+	      private Date created;
+	      private String author;
+	    ...
+	    }
+
+	  -> JSON Response for a message
+	    {
+	      "id":"10",
+	      "message":"Hello world",
+	      "created":"2014-06-01T18:06:36.902",
+	      "author":"koushik"
+	    }
+
+	  -> XML Response for the same message
+	    <messageEntity>
+	      <id>10</id>
+	      <message>Hello world</message>
+	      <created>2014-06-01T18:06:36.902</created>
+	      <author>koushik</author>
+	    </messageEntity>
+
+	  Clearly the JSON response and the XML response are different. So, in other words both these responses are different representations of the same resource.
+	  When you make REST API calls you are sending or receiving representations of the resource.
+
+	  Status Codes
+	    1xx Informational
+	    2xx Success       -> (200 ok/201 Created/204 No Content)
+	    3xx Redirection   -> (302 Found/304 Not Modified/307 Temporary Redirect)
+	    4xx Client Error  -> (400 Bad Request/401 Unauthorized/403 Forbidden/404 Not Found/415 Unsupported Media Type)
+	    5xx Server Error  -> (500 Internal Server Error/)
+
+	  Scenarios
+	    Let's look at the same CRUD use cases we saw in the previous tutorial, and identify what the status codes should be for the message resource
+
+		Operation	    URI	                    Method	Success/Failure	   Status code
+		Get message	    /messages/{messageId}	GET	    Success	           200
+														Not found	       404
+														Failure	           500
+		Delete message	/messages/{messageId}	DELETE	Success			   200 or 204
+														Not found		   404
+														Failure			   500
+		Edit message	/messages/{messageId}	PUT		Success			   200
+														Wrong format/data  400 or 415
+														Not found		   404
+														Failure			   500
+		Create message	/messages				POST	Success			   201
+														Wrong format/data  400 or 415
+														Failure	500
+
+	8 HATEOAS (Hypermedia As The Engine Of Application State)
+	  There's no formal document that really documents the API. Most REST APIs have "help" pages that explain what the API URIs are and what operations are supported. You don't need documentation to use web sites. You go to the home page, and you'll find links to other pages.
+	  This is basically the advantage of using HTTP. Remember that HTTP is HyperText Transfer Protocol. We've discussed that hypertext is text that has links to other text. Let's think about the response we return in our REST API. What if we implement the same concept there too? Let's say you receive a GET request from a client for a message ID. We return the message information in JSON or XML, yes. But what you could also do is send links to comment resource URIs. And likes and shares resource URIs.
+	  So, the web service is being super-helpful to the client by providing all these links in the response. Similar to hyperlinks in web sites. Whether the client wants to use it or not doesn't matter. But if they want it, it's there. 
+	  If you do this, you don't let the client programmer have to know and hard-code the URIs in order to interact with the resources and the application state. You basically let the hypertext you send in the response drive the client's interaction with the application state. So, you could say that hypertext, or hypermedia as it is sometimes called, is being the driver or engine of application state. Hypermedia as the Engine of Application State.
+
+	  A Scenario
+	    Let's start with the /messages collection URI. Accessing /messages should give you a list of messages in the system. Let's say a message representation has the following fields:
+		  Message ID
+		  Message Content
+		  Message Author
+		  Posted Date
+
+		Four simple properties. A JSON representation for a sample message would look something like this:
+		{
+		  "id": "01",
+		  "content": "Hello World!",
+		  "author": "koushik",
+		  "postedDate": "03-01-2014"
+		}
+
+		Now that the client has the list of messages, let's say they want the details of the first message.
+		We've already designed the resource URI for message to be /messages/{messageId}. They need to know that they need to pick up the ID property from the response, and they need to know what to append it to. As a API service implementer, why not send that to the client yourself?
+
+		Consider a sample response for a single message like this:
+		{
+		  "id": "1",
+		  "content": "Hello World!",
+		  "author": "koushik",
+		  "postedDate": "03-01-2014",
+		  "href": "/messages/1"
+		}
+		Notice that the name of the link property is href. That must be familiar. That's exactly how you specify links in HTML. href is a property of the <a> tag. It serves a similar purpose here.
+
+	  Link relations
+	    We are on our way to implementing some HATEOAS concepts.
+	    {
+		  "id": "1",
+		  "content": "Hello World!",
+		  "author": "koushik",
+		  "postedDate": "03-01-2014",
+		  "href": "/messages/1",
+		  "comments-href": "/messages/1/comments",
+		  "likes-href": "/messages/1/likes",
+		   "shares-href": "/messages/1/shares",
+		   "profile-href": "/profiles/koushik",
+		   "comment-post-href": "/messages/1/comments"
+		}
+		
+		If you've used the anchor tags when writing HTML, you might have encountered this rel attribute before. It's basically an attribute that you can add to any link to specify the relationship between the current document and the linked document.
+		The most common example of rel is in stylesheet links. You'd have seen stylesheet links in HTML head tags like this:
+		  <link rel="stylesheet" href="path/to/some.css"/>
+
+	    This could be extended by adding new links and assigning the appropriate rel values for each:
+		{
+		  "id": "1",
+		  "content": "Hello World!",
+		  "author": "koushik",
+		  "postedDate": "03-01-2014",
+		   "links" : [
+		                {  
+		                    "href": "/messages/1",
+		                    "rel": "self"
+		                },
+		                {  
+		                    "href": "/messages/1/comments",
+		                    "rel": "comments"
+		                },
+		                {  
+		                    "href": "/messages/1/likes",
+		                    "rel": "likes"
+		                },
+		                {  
+		                    "href": "/messages/1/shares",
+		                    "rel": "shares"
+		                },
+		                {  
+		                    "href": "/profiles/koushik",
+		                    "rel": "author"
+		                }
+		            ]
+		}
+
+		The format of JSON that I've outlined here is just one of the multitude of ways you could structure links.
+
+	9 The Richardson Maturity Model
+	  When defining a REST API, we can ask are we in a position to say this API is "fully RESTful"?
+	  There is a spectrum of anywhere from "not fully RESTful" to "almost RESTful" to "not RESTful at all". These terms are hard to work with. How do you know how RESTful an API is? Well, there is one way to know, and that's using a model developed by Leonard Richardson. It's called the Richardson Maturity Model, and it breaks down all the concepts we've discussed into 3 levels.
+	  
+	  LEVEL 0:
+	    The swamp of POX. This refers to the common use of Plain Old XML (or POX) to define everything that an operation needs. 
+	    No HTTP concepts are leveraged for communicating information between the server and client.
+	  LEVEL 1:
+	    If you were to refine this model to introduce the concept of resource URIs, you will reach level 1 in the RMM. 
+	    This is the starting level for RESTful APIs.
+	  LEVEL 2:
+	    An API on Level 2 uses standard HTTP methods like GET, POST, PUT and DELETE to do different operations, on the resource URI. The URI specifies what resource is operated upon, and the HTTP method specifies what the operation is.
+	  LEVEL 3:
+	    Is when you implement HATEOAS. That is, the responses have links that control the application state for the client. The client doesn't need to be aware of the different API URIs. All the URIs that the client would need is a part of the response that the server sends.
+
+
+		> Messenger API  
+			<<<Messages>>>
+			OPERATION	      URI	                METHOD	SUCCESS/FAILURE	  STATUS CODE
+			Get message       /messages/{messageId}	GET		Success	          200
+															Not found		  404
+															Failure			  500
+			Delete message	  /messages/{messageId}	DELETE	Success			  200 or 204
+															Not found		  404
+															Failure			  500
+			Edit message	  /messages/{messageId}	PUT		Success			  200
+															Wrong format/data 400 or 415
+															Not found		  404
+															Failure			  500
+			Create 			  message/messages	    POST	Success			  201
+															Wrong format/data 400 or 415
+															Failure			  500
+
+			<<<Profiles>>>
+			OPERATION		URI					    METHOD	SUCCESS/FAILURE		STATUS CODE
+			Get profile	    /profiles/{profileName} GET	    Success				200
+															Not found			404
+															Failure				500
+			Delete profile	/profiles/{profileName} DELETE	Success				200 or 204
+															Not found			404
+															Failure				500
+			Edit profile	/profiles/{profileName} PUT		Success			    200
+															Wrong format/data   400 or 415
+															Not found			404
+															Failure				500
+			Create profile	/profiles				POST	Success				201
+															Wrong format/data	400 or 415
+															Failure				500
+
+		    <<<Comments (and similarly Likes and Shares)>>>
+			OPERATION		URI											METHOD	SUCCESS/FAILURE		STATUS CODE
+			Get comment		/messages/{messageId}/comments/{commentId}	GET		Success				200
+																				Not found			404
+																				Failure				500
+			Delete comment	/messages/{messageId}/comments/{commentId}	DELETE	Success				200 or 204
+																				Not found			404
+																				Failure				500
+			Edit comment	/messages/{messageId}/comments/{commentId}	PUT		Success				200
+																				Wrong format/data	400 or 415
+																				Not found			404
+																				Failure				500
+			Create comment	/messages/{messageId}/comments				POST	Success				201
+																				Wrong format/data	400 or 415
+																				Failure				500
+
+> Section 2. Implementation with JAX-RS
+  	2.1 ¿What is JAX-RS?
+      JAX-RS is an API to write REST API applications
+      There are a lot of libraries which let you write REST API application. You don't really need the library to write REST API applications, so you can write simple server applications which can do a REST API request/response, but the library can make things simple so you don't have to do everything your selve.
+
+      JAX-RS is a bounch of interfaces & annotations.
+      Well you need classes that implements those interfaces and reads those annotations. -> (Jersey/RESTeasy)
+
+      Why Jersey?
+        "Reference implementation" for the JAX-RS specification
+
+    2.2 Setting UP
+      -> Create a Maven Project from Eclipse
+        .File>New>Maven Project
+        .Select an Archetype
+          Group Id: org.glassfish.jersey.archetypes
+          Artifact Id: jersey-quickstart-webapp
+          Version 2.14
+          *The first time you'll need to register this archetype
+        .Enter your project details
+          Group Id. com.yourcompany
+          Artifact Id:  messenger
+          Version: 0.0.1-SNAPSHOT
+          Package: com.yourcompany
+        .Click on Finish  
+
+      -> Create a New Server for Eclipse
+        From the Java EE perspective
+          Select 'Servers' tab
+          .Add New Server (Tomcat 7) select Tomcat directory installation
+          .Add messenger application
+          .start Server
+
+      -> Launch messenger application
+        From Project Explorer
+        .Left click to messenger project
+          Run As: Run on Server
+
+    2.3 Understanding The Application Structure
+      .messenger is a Standard Web Application
+      .It has the jars for jersey on the classpath -> Java Resources/Libraries/Maven Dependencies
+      .In the web.xml (src/main/webapp/WEB-INF/web.xml)
+        There is one servlet which is pointing to 'org.glassfish.jersey.servlet.ServletContainer' .
+        And it should be map to url-pattern '/webapi/*', so any request which has that url-pattern will be handle by the jersey servlet
+        ...
+          <?xml version="1.0" encoding="UTF-8"?>
+		  <!-- This web.xml file is not required when using Servlet 3.0 container,
+		       see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
+		  <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+		    <servlet>
+		        <servlet-name>Jersey Web Application</servlet-name>
+		        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+		        <init-param>
+		            <param-name>jersey.config.server.provider.packages</param-name>
+		            <param-value>com.yourcompany.messenger</param-value>
+		        </init-param>
+		        <load-on-startup>1</load-on-startup>
+		    </servlet>
+		    <servlet-mapping>
+		        <servlet-name>Jersey Web Application</servlet-name>
+		        <url-pattern>/webapi/*</url-pattern>
+		    </servlet-mapping>
+		  </web-app>
+
+	2.4 Creating a Resource
+	  -> Step1. Create a New Class
+	    .File>New>Java Clas
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.resources
+	    .Name: MessageResource
+	    ...src/main/java/com.yourcompany.messenger.resources.MessageResource
+	      package com.yourcompany.messenger.resources;
+
+		  public class MessageResource {
+
+		  }
+	  -> Step2. Add a method that returns the response
+	    ...src/main/java/com.yourcompany.messenger.resources.MessageResource
+	      package com.yourcompany.messenger.resources;
+
+	      import javax.ws.rs.Path;
+	      import javax.ws.rs.GET;
+	      import javax.ws.re
+
+	      @Path("/messages")
+		  public class MessageResource {
+
+		  	  @GET
+		  	  @Produces(MediaType.TEXT_PLAIN)
+			  public String getMessages(){
+				  return "Hello, World!!!";
+			  }
+		  }
+	    .Jersey provides a waty to:
+	      - Map a URL to a Class                -> @Path("/yourPath")          [import javax.ws.rs.Path]
+		  - Map an HTTP method to a Java method -> @GET                        [import javax.ws.rs.GET|POST|PUT|DELETE]
+		  + Specifying response format          -> @Produces(MediaType.FORMAT) [import javax.ws.rs.Produces/javax.ws.rs.core.MediaType]
+		    - MediaType: Is a handy Enumeration to specify diferent content/types than an HTTP response will return
+	  
+	  -> Step3. Make sure your class is in the package configured in Jersey servlet's init-param
+	    ...
+			<?xml version="1.0" encoding="UTF-8"?>
+			<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+			    <servlet>
+			        <servlet-name>Jersey Web Application</servlet-name>
+			        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+			        <init-param>
+			            <param-name>jersey.config.server.provider.packages</param-name>
+			            <param-value>com.yourcompany.messenger</param-value>
+			        </init-param>
+	        ...
+
+	  -> Step4. Annotate class with Path annotation (javax.ws.rs.Path)
+	  -> Step5. Annotate method with the right HTTP method annotation (javax.ws.rs.GET|POST|PUT|DELETE)
+	  -> Step6. Annotate method with the @Produces specifying response format
+
+	2.5 Returning XML Response
+	  -> Step1. Create the necessary model and services classes
+	  -> Step2. Ensure the model classes have a no-argument constructor.
+        In this example we are handling XML/JSON conversion, so we need a way for those frameworks to create new instances of your class.
+
+	    -> Create Message model Class
+	    .File>New>Java Class
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.model
+	    .Name: Message
+	    ...src/main/java/com.yourcompany.messenger.model.Message
+	      package com.yourcompany.messenger.model;
+
+	      import java.util.Date;
+
+		  public class Message {
+
+		    private long id;
+		    private String message;
+		    private Date created;
+		    private String author;
+
+		    public Message(long id, String message, String author){
+				this.id = id;
+				this.message = message;
+				this.created = new Date();
+				this.author = author;
+			}
+		    //left click>source>Generate Getters & Setters
+		  }
+
+		-> Create MessageService service Class
+		.File>New>Java Class
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.service
+	    .Name: MessageService
+
+		...src/main/java/com.yourcompany.messenger.service.MessageService
+		  package com.yourcompany.messenger.service;
+
+		  import com.yourcompany.messenger.model.Message;
+		  import java.util.List;
+		  import java.util.ArrayList;
+
+		  public class MessageService{
+
+		    public list<Message> getAllMessages(){
+		      Message m1 = new Message(1L, "Hello, World!!", "koushik");
+		      Message m2 = new Message(1L, "Hello, Jersey!!", "koushik");
+		      List list = new ArrayList();
+		      list.add(m1);
+		      list.add(m2);
+		      return list;
+
+		    }
+
+		  }
+
+	  -> Step3. Update the @Produces annotation to XML format
+	  	.../src/main/java/com.yourcompany.messenger.resources
+	  	  package com.yourcompany.messenger.resources;
+
+	  	  import javax.ws.rs.Path;
+	  	  import javax.ws.rs.GET;
+	  	  import javax.ws.rs.Produce;
+	  	  import javax.ws.rs.core.MediaType;
+	  	  import java.util.List;
+	  	  import com.yourcompany.messenger.model.Message;
+	  	  import com.yourcompany.messenger.service.MessageService;
+
+	  	  @Path("/messages")
+	  	  public class Message{
+
+	  	  	@GET
+	  	  	@Produces(MediaType.APPLICATION_XML)
+	  	  	public List<Message> getMessages(){
+	  	  	  return MessageService.;
+	  	  	}
+	  	  }
+
+	    .If you launch the application right now, you'll get following error:
+	    SEVERE: MessageBodyWriter not found for media type=application/xml, type=class java.util.ArrayList, genericType=java.util.List<com.yourcompany.messenger.model.Message>. 
+	      -> This means application find a Generic type of 'Message' which requires to convert into XML, but Jersey doesn't know how to accomplish that.
+
+	    This could be acomplished by Java API for XML Processing (JAXP)
+	    However, JAXP needs some clues to do the conversion.
+	     -> Add @XmlRootElement (import javax.xml.bind.annotation.XmlRootElement;) at class definition sentence
+	      ...
+	        package com.yourcompany.messenger.model;
+
+	        import java.util.Date;
+			import javax.xml.bind.annotation.XmlRootElement;
+
+			@XmlRootElement
+			public class Message {
+		  ...
+
+	2.6 Installina a REST API Client
+      -> Validating CHROME apps:
+        Access through chrome to URL chrome://apps
+        In case you don't have postman
+        Access to Chrome web store and Install (search for 'postman')
+
+    2.7 Building Service Stubs
+      In this lesson we're going to enhance the MessageService class
+      .MessageService
+        messages : Map<Long, Message>
+        MessageService()
+        getAllMessages()       : List<Message>
+        getMessage(long)       : Message
+        addMessage(Message)    : Message
+        updateMessage(Message) : Message
+        removeMessage(long)    : Message
+
+      -> Create the Profile Java Class
+        .File>New>Java Class
+  	      .Source foler: messenger/src/main/java
+	      .Package: com.yourcompany.messenger.model
+	      .Name: Profile
+	      ...src/main/java/com.yourcompany.messenger.model.Profile
+	        package com.yourcompany.messenger.model;
+
+		    import java.util.Date;
+		    import javax.xml.bind.annotation.XmlRootElement;
+
+		    @XmlRootElement
+		    public class Profile {
+
+			  private long id;
+			  private String profileName;
+		      private String firstName;
+			  private String lastName;
+			  private Date created;
+			
+			  public Profile(long id, String profileName, String firstName, String lastName){
+				this.id = id;
+				this.profileName = profileName;
+				this.firstName = firstName;
+				this.lastName = lastName;
+				this.created = new Date();
+			}
+
+			//left click>source>Generate Getters & Setters
+		  ...
+    
+      -> Create the Database class
+        .File>New>Java Class
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.database
+	    .Name: Database
+	    ...src/main/java/com.yourcompany.messenger.database.Database
+	      package com.yourcompany.messenger.database;
+
+		  import com.yourcompany.messenger.model.Message;
+		  import com.yourcompany.messenger.model.Profile;
+
+		  import java.util.HashMap;
+		  import java.util.Map;
+
+		  public class Database {
+
+			private static Map<Long, Message> messages = new HashMap();
+			private static Map<Long, Profile> profiles = new HashMap();
+			
+			public static Map<Long, Message> getMessages() {
+				return messages;
+			}
+			public static Map<Long, Profile> getProfiles() {
+				return profiles;
+			}
+
+		  }
+
+	  -> Modify MessageService Java class
+	    .../src/main/java/com.yourcompany.messenger.service.MessengerService
+		  package com.yourcompany.messenger.service;
+
+		  import java.util.List;
+		  import java.util.ArrayList;
+		  import java.util.Map;
+
+		  import com.yourcompany.messenger.database.Database;
+		  import com.yourcompany.messenger.model.Message;
+
+		  public class MessageService {
+			
+			private Map<Long, Message> messages = Database.getMessages();
+			
+			public List<Message> getAllMessages(){
+				
+				return new ArrayList<Message>(messages.values());
+				/*Message m1 = new Message(1L, "Hello, World!!!", "koushik");
+				Message m2 = new Message(2L, "Hello, Jersey!!!", "koushik");
+				List<Message> list = new ArrayList();
+				list.add(m1);
+				list.add(m2);
+				return list;*/
+			}
+			
+			public Message getMessage(long id){
+				return messages.get(id);
+			}
+			
+			public Message addMessage(Message message){
+				message.setId(messages.size() + 1);
+				messages.put(message.getId(), message);
+				return message;
+			}
+			
+			public Message updateMessage(Message message){
+				if(message.getId() <= 0){
+					return null;
+				}
+				messages.put(message.getId(), message);
+				return message;
+			}
+
+			public Message removeMessage(long id){
+				return messages.remove(id);
+			}
+		  }
+
+    2.8 Accessing Path Params
+      .Jersey provides a waty to:
+          - Map a URL to a Class/Method                     -> @Path("/yourPath")  [import javax.ws.rs.Path]
+		  - Map a URL segment as parameter to a Java method -> @PathParam          [import javax.ws.rs.PathParam]        
+      .../src/main/java/com.yourcompany.messenger.resources.MessageResource.java
+        package com.yourcompany.messenger.resources;
+        ...
+        @Path("/messages")
+        public class MessageResource{
+
+        	MessageService messageService = new MessageService();
+        	...
+
+        	@GET
+        	@Path("/{messageId}")
+        	@Produces(MediaType.TEXT_PLAIN)
+        	public Message getMessage(@PathParam("messageId") long messageId){
+
+        		return messageService.getMessage(messageId);
+        	}
+
+        }
+
+    2.9 Returning JSON Response
+      .../messenger/pom.xml
+        ...
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+        ...
+       	
+      -> There are these libraries you'll need to include for differente types of conversion and some of the classes that are included implement a particular Interface:
+      .messageBodyReader
+      .messageBodyWriter
+
+      ...src/main/java/com.yourcompany.messenger.resources.MessageResource.java
+      ...
+        	@GET
+			@Produces(MediaType.APPLICATION_JSON)
+			public List<Message> getMessages(){
+				return msgService.getAllMessages();
+			}
+			
+			@GET
+			@Path("/{messageId}")
+			@Produces(MediaType.APPLICATION_XML)
+			public Message getMessage(@PathParam("messageId") long msgId){
+				
+				return msgService.getMessage(msgId);
+			}
+		}
+
+	2.10 Implementing POST Method
+	  -> Step1. Annotate the handler method with @POST and @Produces
+	  -> Step2. Accept the Model type as argument to bind to the request body
+	  -> Step3. Use @Consumes to specify the expected request body format
+
+      .../src/main/java/com.yourcompany.messenger.resources
+        package com.yourcompany.messenger.resources;
+        ...
+        @Path("/messages")
+        public class MessageResource {
+	    ...
+	      @POST
+	      @Consumes(MediaType.APPLICATION_JSON)
+	      @Produces(MediaType.APPLICATION_JSON)
+	      public Message addMessage(Message message){
+
+	      	return messageService.addMessage(message);
+	      }
+	    ...
+
+	2.11 Implementing Update and Delete
+	  .../src/main/java/com.yourcompany.messenger.resources.MessageResource.java
+        package com.yourcompany.messenger.resources;
+        ...
+        @Path("/messages")
+        public class MessageResource {
+	    ...
+	      @PUT
+	      @Path("/{messageId}")
+	      @Consumes(MediaType.APPLICATION_JSON)
+	      @Produces(MediaType.APPLICATION_JSON)
+	      public Message updateMessage(@PathParam("messageId") long id, Message message){
+	      	message.setId(id);
+	      	return messageService.updateMessage(message);
+	      }
+
+	      @DELETE
+	      @Path("/{messageId}")
+	      @Produces(MediaType.APPLICATION_JSON)
+	      public void deleteMessage(@PathParam("messageId") long id){
+
+	      	return messageService.removeMessage(id);
+	      }
+	    ...
+
+	2.12 Implementing Profile Resource
+	  -> Adjust Database class to set Profile identifier on the Map as String for profileName
+	    ...
+	      package com.yourcompany.messenger.database;
+	      ...
+		  public class Database {
+			
+			...
+			private static Map<String, Profile> profiles = new HashMap();
+			...
+			public static Map<String, Profile> getProfiles() {
+				return profiles;
+			}
+		  }
+
+	  -> Create ProfileService Java Class
+		.ProfileService
+		        profiles : Map<String, Profile>
+		        ProfileService()
+		        getAllProfiles()       : List<Profile>
+		        getProfile(String)     : Profile
+		        addProfile(Profile)    : Profile
+		        updateProfile(Profile) : Profile
+		        removeProfile(String)  : Profile
+
+	    .File>New>Java Clas
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.service
+	    .Name: ProfileService
+	    ...src/main/java/com.yourcompany.messenger.service.ProfileService.java
+	      package com.yourcompany.messenger.service;
+
+		  import com.yourcompany.messenger.database.Database;
+		  import com.yourcompany.messenger.model.Profile;
+		  import java.util.Map;
+		  import java.util.List;
+		  import java.util.ArrayList;
+
+		  public class ProfileService {
+
+		  private Map<String, Profile> profiles = Database.getProfiles();
+		  	
+		  	public ProfileService() {
+		  		profiles.put("koushik", new Profile(1L, "koushik", "Koushik", "Kothagal"));
+		  	}
+		  	
+		  	public List<Profile> getAllProfiles() {
+		  		return new ArrayList<Profile>(profiles.values()); 
+		  	}
+		  	
+		  	public Profile getProfile(String profileName) {
+		  		return profiles.get(profileName);
+		  	}
+		  	
+		  	public Profile addProfile(Profile profile) {
+		  		profile.setId(profiles.size() + 1);
+		  		profiles.put(profile.getProfileName(), profile);
+		  		return profile;
+		  	}
+		  	
+		  	public Profile updateProfile(Profile profile) {
+		  		if (profile.getProfileName().isEmpty()) {
+		  			return null;
+		  		}
+		  		profiles.put(profile.getProfileName(), profile);
+		  		return profile;
+		  	}
+		  	
+		  	public Profile removeProfile(String profileName) {
+		  		return profiles.remove(profileName);
+		  	}
+		  }
+
+	  -> Create ProfileResource Java Class
+	    .File>New>Java Clas
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.resources
+	    .Name: ProfileResource
+	    ...src/main/java/com.yourcompany.messenger.service.ProfileResource.java
+	      package com.yourcompany.messenger.resources;
+
+		  import javax.ws.rs.Path;
+		  import javax.ws.rs.PathParam;
+		  import javax.ws.rs.Produces;
+		  import javax.ws.rs.Consumes;
+		  import javax.ws.rs.core.MediaType;
+		  import javax.ws.rs.GET;
+		  import javax.ws.rs.POST;
+		  import javax.ws.rs.PUT;
+		  import javax.ws.rs.DELETE;
+		  import java.util.List;
+
+		  import com.yourcompany.messenger.model.Profile;
+		  import com.yourcompany.messenger.service.ProfileService;
+
+		  @Path("/profiles")
+		  @Consumes(MediaType.APPLICATION_JSON)
+		  @Produces(MediaType.APPLICATION_JSON)
+		  public class ProfileResource {
+
+		  	ProfileService profileService = new ProfileService();
+		  	
+		  	@GET
+		  	public List<Profile> getProfiles(){
+		  		return profileService.getAllProfiles();
+		  	}
+		  	
+		  	@GET
+		  	@Path("{profileName}")
+		  	public Profile getProfile(@PathParam("profileName") String prfName){
+		  		return profileService.getProfile(prfName);
+		  	}
+
+		  	@POST
+		  	public Profile addProfile(Profile profile){
+		  		return profileService.addProfile(profile);
+		  	}
+
+		  	@PUT
+		  	@Path("/{profileName}")
+		  	public Profile updateProfile(@PathParam("profileName") String prfName, Profile profile){
+		  		profile.setProfileName(prfName);
+		  		return profileService.updateProfile(profile);
+		  	}
+		  	
+		  	@DELETE
+		  	@Path("/{profileName}")
+		  	public void removeProfile(@PathParam("profileName") String prfName){
+		  		profileService.removeProfile(prfName);
+		  	}
+		  }
+
+    2.13 Pagination And Filtering
+      /messages?year=2015
+      /messages?start=10&size=20
+
+      To implement those URI options to our RESTful API, we need to implement a query parameter.
+	  .Jersey provides a waty to:
+	    - Map a QueryParam within a Method     -> @QueryParam("year")          [import javax.ws.rs.QueryParam]
+
+	  -> Let's add two methods to our MessageService Java class
+	    ...
+		  public List<Message> getMessagesByYear(int year){
+			List<Message> messagesByYear = new ArrayList();
+			Calendar cal = Calendar.getInstance();
+			for(Message msg : messages.values()){
+				cal.setTime(msg.getCreated());
+				if(cal.get(Calendar.YEAR) == year){
+					messagesByYear.add(msg);
+				}
+			}
+			return messagesByYear;
+		  }
+			
+		  public List<Message> getMessagesPaginated(int startIndex, int size){
+			ArrayList<Message> list = new ArrayList<Message>(messages.values());
+			return list.subList(startIndex, startIndex + size);
+		  }
+		
+	  -> Let's add @QueryParam annotation to @GET method in the MessageResource Java class
+	    .../src/main/java/com.yourcompany.messenger.resources.MessageResource.java
+	      ...
+		  @Path("/messages")
+		  public class MessageResource {
+  
+			  MessageService msgService = new MessageService();
+  
+			  @GET
+			  @Produces(MediaType.APPLICATION_JSON)
+			  public List<Message> getMessages(@QueryParam("year")  int year
+					                          ,@QueryParam("start") int start
+					                          ,@QueryParam("size")  int size){
+  				
+				  if(year > 0){
+					  return msgService.getMessagesByYear(year);
+				  }
+				  if(start > 0 && size > 0){
+					  return msgService.getMessagesPaginated(start, size);
+				  }
+				  return msgService.getAllMessages();
+			  }
+          ...
+
+    2.14 The Param Annotations
+      .MarixParam  -> http://.../webapi/paramannotations;param=value
+      .HeaderParam  
+      .CookieParam
+      .FormParam   -> HTML form submits calling REST APIs
+
+        .../src/main/java/com.yourcompany.messenger.resources.InjectDemoResource.java
+		  package com.yourcompany.messenger.resources;
+  
+		  import javax.ws.rs.Consumes;
+		  import javax.ws.rs.CookieParam;
+		  import javax.ws.rs.GET;
+		  import javax.ws.rs.HeaderParam;
+		  import javax.ws.rs.MatrixParam;
+		  import javax.ws.rs.Path;
+		  import javax.ws.rs.Produces;
+		  import javax.ws.rs.core.MediaType;
+  
+		  @Path("/injectdemo")
+		  @Consumes(MediaType.TEXT_PLAIN)
+		  @Produces(MediaType.TEXT_PLAIN)
+		  public class InjectDemoResource {
+  			
+			  @GET
+			  @Path("annotations")
+			  public String getParamsUsingAnnotations(@MatrixParam("param") String matrixParam,
+													  @HeaderParam("authSessionID") String header,
+													  @CookieParam("name") String cookie) {
+				  return "Matrix param: " + matrixParam + " Header param: " + header + " Cookie param: " + cookie;
+			  }
+  			
+  
+		  }
+
+    2.15 Using Context And BeanParam Annotations
+      -> Context Params
+        .../src/main/java/com.yourcompany.messenger.resources.InjectDemoResource.java
+		  package com.yourcompany.messenger.resources;
+  
+		  import javax.ws.rs.Consumes;
+		  import javax.ws.rs.CookieParam;
+		  import javax.ws.rs.GET;
+		  import javax.ws.rs.HeaderParam;
+		  import javax.ws.rs.MatrixParam;
+		  import javax.ws.rs.Path;
+		  import javax.ws.rs.Produces;
+		  import javax.ws.rs.core.MediaType;
+  
+		  @Path("/injectdemo")
+		  @Consumes(MediaType.TEXT_PLAIN)
+		  @Produces(MediaType.TEXT_PLAIN)
+		  public class InjectDemoResource {
+  			
+			  @GET
+			  @Path("annotations")
+			  public String getParamsUsingAnnotations(@MatrixParam("param") String matrixParam,
+													  @HeaderParam("authSessionID") String header,
+													  @CookieParam("name") String cookie) {
+				  return "Matrix param: " + matrixParam + " Header param: " + header + " Cookie param: " + cookie;
+			  }
+
+			  @GET
+			  @Path("context")
+			  public String getParamsUsingContext(@Context UriInfo uInfo, @Context HttpHeaders headers){
+			  	String path = uInfo.getAbsolutePath().toString();
+			  	String cookies = headers.getCookies().toString();
+			  	return "Path: "+path+" Cookies: "+cookies;
+			  }
+  			
+  
+		  }
+
+      -> Bean Params
+        This option allow us to avoid define so many Annotation Params into our method, let's see this implementation towards @GET method in the MessageResource Java class.
+        
+        .File>New>Java Clas
+	      .Source foler: messenger/src/main/java
+	      .Package: com.yourcompany.messenger.resources.bean
+	      .Name: MessageFilterBean
+	      ...src/main/java/com.yourcompany.messenger.resources.bean.MessageFilterBean.java
+	        package com.yourcompany.messenger.resources.bean;
+
+	        import javax.ws.rs.QueryParam;
+
+	        public class MessageFilterBean{
+	        	private @QueryParam("year")  int year;
+				private @QueryParam("start") int start;
+				private @QueryParam("size")  int size;
+
+		        //left click>source>Generate Getters & Setters				
+	        }
+
+	      ...src/main/java/com.yourcompany.messenger.resources.MessageResource.java
+	        ...
+		    @Path("/messages")
+		    public class MessageResource {
+    
+			    MessageService msgService = new MessageService();
+    
+			    @GET
+			    @Produces(MediaType.APPLICATION_JSON)
+			    public List<Message> getMessages(@BeanParam MessageFilterBean msgFilterBean){
+    				
+				    if(msgFilterBean.getYear() > 0){
+					    return msgService.getMessagesByYear(msgFilterBean.getYear());
+				    }
+				    if(msgFilterBean.getStart() > 0 && msgFilterBean.getSize() > 0){
+					    return msgService.getMessagesPaginated(msgFilterBean.getStart(), msgFilterBean.getSize());
+				    }
+				    return msgService.getAllMessages();
+			    }
+            ...
+
+    2.16 Implementing Subresources
+      /messages/{messageId}/comments/{commentId}
+      To access this url-pattern paths it's recommendable to use subresources eventhough you can define the handle method could be defined inside the parent resource implementing subresources it's a good practice
+      
+      ->Implementing link method to Subresource
+        .../src/main/java/com.yourcompany.messenger.resources.MessengerResource.java
+          ...
+            @Path("/{messageId}/comments")
+            public CommentResource getCommentResource(){
+              return new CommentResource();
+            }
+  
+          }
+
+      -> Create CommentResource Java class
+        .../src/main/java/com.yourcompany.messenger.resources.CommentResource.java
+          package com.yourcompany.messenger.resources;
+
+          import javax.ws.rs.Path;
+          import javax.ws.rs.GET;
+
+          @Path("/")
+          public class CommentResource{
+
+            @GET
+            public String test(){
+              return "new sub resource";
+            }
+
+            @GET
+            @Path("/{commentId}")
+            public String testw(@PathParam("commentId") long commentID){
+              return "Method to return comment ID: " +  commentID
+            }
+            ...
+          }
+
+    2.17 Sending Status Codes and Location Headers
+      When you return a response from your methods call, there is a good idea to include certain information as the status and some other information to it. Now how can you achieve this, because actually Jetty takes your model objects and convert it to JSON.
+      The Answer is using a Response object, which uses the builder pattern.
+
+      Let's modify the POST method object returning a Response object in order to include the status and location to our response.
+
+      -> Return the STATUS and LOCATION
+        .../src/main/java/com.yourcompany.messenger.resources.MessengerResource.java
+          package com.yourcompany.messenger.resources;
+          ...
+          @Path("/messages")
+		  public class MessageResource {
+		    ...
+		    @POST
+		    public Message addMessage(Message message){
+		      return msgService.addMessage(message);
+		    }
+
+		    public Response addMessageWithStatus(Message message){
+		      Message newMessage = msgService.addMessage(message);
+		      return Response.setStatus(Status.CREATED)
+		                     .entity(newMessage)
+		                     .build();
+		    }
+
+		    public Response addMessageWithStatusNLocation1(Message message) throws URISyntaxException{
+		      Message newMessage = msgService.addMessage(message);
+		      //URI take the SERVER context as the root 'http://localhost:8080' + -> '/messenger/webapi/messages/#'
+		      return Response.created(new URI("/messenger/webapi/messages" + newMessage.getId()))  
+		                     .entity(newMessage)
+		                     .build();
+		    }
+
+		    public Response addMessageWithStatusNLocation2(Message message, @Context UriInfo uriInfo){
+		      Message newMessage = msgService.addMessage(message);
+		      String newId = String.valueOf(newMessage.getId());
+		      //uriInfo.getAbsolutePath().toString() + newId -> throws URISyntaxException
+		      URI uri = uriInfo.getAbsolutePathBuilder().path(newId).build();
+		      return Response.created(uri)  
+		                     .entity(newMessage)
+		                     .build();
+		    }
+
+		  }
+
+    2.18 Handling Exceptions
+      For MessageService Java Class when we provide a key that it's not available to getMessage method, the service returns null the resource class returns null and JAX-RS return (202) 'No Content'
+      Let's create an exception and throw it indicating that there is no content with the ID that was requested:
+      
+        -> Step1. Create a New Class
+	      .File>New>Java Clas
+	      .Source foler: messenger/src/main/java
+	      .Package: com.yourcompany.messenger.exception
+	      .Name: DataNotFoundException
+	      .SuperClass: RuntimeException
+ 		    -> Add generated serial version ID
+ 		    -> Add a constructor
+	      ...src/main/java/com.yourcompany.messenger.exception.DataNotFoundException
+	        package com.yourcompany.messenger.exception;
+  
+		    public class DataNotFoundException extends RuntimeException {
+    
+			    /**
+			     * 
+			     */
+			    private static final long serialVersionUID = -4964399275681815198L;
+    
+			    public DataNotFoundException(String message){
+				    super(message);
+			    }
+		    }
+  
+        -> Step2. Throw exception from getMessage method
+          ...src/main/java/com.yourcompany.messenger.service.MessengerService
+            package com.yourcompany.messenger.service;
+            ...
+		    public class MessageService {
+		      ...
+              /*public Message getMessage(long id){
+		  	    return messages.get(id);
+		      }*/
+		      public Message getMessage(long id){
+		        Message message = messages.get(id);
+		        if(message == null){
+		          throw new DataNotFoundException("Message with id "+id+" not found");
+		        }
+		        return message;
+		      }
+  
+		  In this case when you try to get a Message with a key that does not exist, it certainly will throw an exception. This exception
+		  will correspond to a Server Exception (TomCat in this case), because MessageService throw the exception and MessageResource it's not catching that exception so that get's throwing further, then the exception keeps blowing up -> JAX-RS doesn't handle it goes all the way up to the Server Servlet Container, and the Server Servlet Container has some default behaviors for when an exception it's thrown   and it's not catched and this behavior is to thos whe 'Server' default error page, sometihng like:
+  
+		    <head>
+	          <title>Apache Tomcat/7.0.73 - Informe de Error</title>
+	          <style>
+	            ...
+	          </style>
+	        </head>
+	        <body>
+	          <h1>Estado HTTP 500 - com.yourcompany.messenger.exception.DataNotFoundException: Message with ID 200 not found</h1>
+	          <HR size="1" noshade="noshade">
+	          <p>
+	              <b>type</b> Informe de Excepción
+	          </p>
+	        ...
+  
+	  To avoid this Server default Error page, we're going to intercept this exception and return as reponse a message in order to  indicate the correct details associated with the exception thrown
+  
+	    -> Step1: Create a New Java Class
+	      .File>New>Java Clas
+	        .Source foler: messenger/src/main/java
+	        .Package: com.yourcompany.messenger.model
+	        .Name: ErrorMessage
+  
+	          ...src/main/java/com.yourcompany.messenger.model.ErrorMessage.java
+		        package com.yourcompany.messenger.model;
+        		
+    		    import javax.xml.bind.annotation.XmlRootElement;
+    
+    		    @XmlRootElement
+		        public class ErrorMessage {
+			        private String errorMessage;
+			        private int errorCode;
+			        private String documentation;
+    
+			        public ErrorMessage(){
+    
+			        }
+    
+			        public ErrorMessage(String errorMessage, int errorCode, String documentation)	
+			        //left click>source>Generate Getters & Setters
+		        }
+  
+  
+	    -> Step2: Create the Map between the throwed Exception (DataNotFoundException) and the response (ErrorMessage)
+	      The way we map exceptions to responses in JAX-RS is implementing the interface ExceptionMapper
+	      .File>New>Java Clas
+	        .Source foler: messenger/src/main/java
+	        .Package: com.yourcompany.messenger.exception
+	        .Name: DataNotFoundExceptionMapper
+	        .Interfaces: javax.ws.rs.ext.ExceptionMapper<DataNotFoundException>
+	          ...src/main/java/com.yourcompany.messenger.exception.DataNotFoundExceptionMapper.java
+	            package com.yourcompany.messenger.exception;
+    
+			    import javax.ws.rs.core.Response;
+			    import javax.ws.rs.core.Response.Status;
+			    import javax.ws.rs.ext.ExceptionMapper;
+			    import javax.ws.rs.ext.Provider;
+    
+			    @Provider
+			    public class DataNotFoundExceptionMapper implements
+					    ExceptionMapper<DataNotFoundException> {
+
+				    @Override
+				    public Response toResponse(DataNotFoundException exc) {
+					    //return Response.status(Status.NOT_FOUND).build(); *#*
+					    ErrorMessage errorMsg = new ErorMessage(exc.getMessage(), 404, "http://javabrains.koushik.org");
+					    return Response.status(Status.NOT_FOUND)
+					                   .entity(errorMsg)
+					                   .build();
+				    }
+			    }
+
+	      So now when the MessageService throw our Exception, is gonna look up to the resource, if the resource doesn't catch it, the resource throws it to JAX-RS, now JAX-RS looks at all the ExceptionMappers that have been annotated with @Provider and it sees if there is any class that is mapped with that exception that was thrown.
+	      *#*Note how if we don't define an entity in our Respnose the response will send the Server Servlet Error Page
+
+	    -> Step3 Let's Create a GenericException response
+	      .File>New>Java Clas
+	      .Source foler: messenger/src/main/java
+	      .Package: com.yourcompany.messenger.exception
+	      .Name: GenericException
+	      ...src/main/java/com.yourcompany.messenger.exception.GenericException
+
+    2.19 Using WebApplicationException
+      ¿Why do we need an Exception Mapper?
+        The answer is since JAX-RS has no context/information about the kind of exceptions that your application can throw.
+        JAX-RS also has it's own set of Exceptions that it does maps to an STATUS and a RESPONSE, since JAX-RS knows what those exceptions are you don't need to write an exception mapper, this exceptions are known as Web Application Exception.
+
+        Let's see how to accomplish it:
+        ...src/main/java/com.yourcompany.messenger.service.MessengerService
+            package com.yourcompany.messenger.service;
+            ...
+		    public class MessageService {
+		      ...
+		      public Message getMessage(long id){
+		        //return messages.get(id);
+		        Message message = messages.get(id);
+		        if(message == null){
+		          //throw new DataNotFoundException("Message with id "+id+" not found");
+		          ErrorMessage errorMsg = new ErrorMessage("Message with ID "+id+" not found", 404, "http://javabrains.koushik.io");
+		          Response response = Response.status(Status.NOT_FOUND)
+		          						      .entity(errorMsg)
+		          						      .build();
+     			  throw new WebApplicationException(response);
+		        }
+		        return message;
+
+		      }
+
+		Now, let me explain you why I'm not a big fan of this:
+		Notice how we are in MessageService Java Class, and how from the Business Service we write all this code that handles the response that needs to be send to the user, it's not really business code, I'll say this is presentation code, this is something that manifest the user experience so I guess this is a bad place for this code. However a good place could be the MessageReource Java class but even though I prefer the exception Java Class approach.
+
+		-> Look at the WebApplicationException API doc's (http://docs.oracle.com/javaee/7/api/javax/ws/rs/WebApplicationException.html)
+		  There are 3 classes for exceptions
+		  .ClientErrorException - 4XX error codes
+		  .RedirectionException - 3XX error codes
+		  .ServerErrorException - 5XX error codes
+
+		  This is important to know because you can throw an specialized exception according to the exception and the status will be set by default.
+
+    2.20 HATEOAS (Hypermedia As The Engine Of Application State)
+      When ever we need to be able to send links to resources in the response.
+      Let's implement this in the Message Java Class, in order to do that let's add a new property to this class of type link
+
+      -> Create the Link Java Class
+      .File>New>Java Clas
+	    .Source foler: messenger/src/main/java
+	    .Package: com.yourcompany.messenger.model
+	    .Name: Link
+	    ...src/main/java/com.yourcompany.messenger.model.Link.java
+	      package com.yourcompany.messenger.model;
+
+	      public class Link{
+	        private String link;
+	        private String rel;
+
+	        public Link(String link, String rel){
+				this.link = link;
+				this.rel = rel;
+			}
+
+			//left click>source>Generate Getters & Setters
+	      }
+
+ 	  -> Add a List of Links as a property to the Message Java Class
+ 	    ...src/main/java/com.yourcompany.messenger.model.Message.java
+ 	      package com.yourcompany.messenger.model;
+  		  ...
+		  @XmlRootElement
+		  public class Message {
+  
+			  private long id;
+			  private String message;
+			  private Date created;
+			  private String author;
+			  private List<Link> links = new ArrayList<>();
+
+  			  //left click>source>Generate Getters & Setters
+  			  ...
+  			  public addLink(String url, String rel){
+  			    Link link = new Link(url, rel);
+  			    links.add(link);
+  			  }
+  		  ...
+
+      -> Add this link info for @GET on MessageResource Java class
+  		+uriInfo
+  		     .getAbsolutePathBuilder()
+  		       --> UriBuilder
+  		                .path("blah")	          	    /blah/
+  		                .path(MessageResource.class)    /messages/
+
+        ...src/main/java/com.yourcompany.messenger.resources.MessengerResource.java
+  			@GET
+			@Path("/{messageId}")
+			@Produces(MediaType.APPLICATION_JSON)
+			public Message getMessage(@PathParam("messageId") long msgId, @Context UriInfo uriInfo){
+				//return msgService.getMessage(msgId);
+				Message message = msgService.getMessage(msgId);
+				/*String url = uriInfo.getAbsolutePathBuilder().path(MessageResource.class)
+		         *                    .path(Long.toString(message.getId()))
+		         *                    .build()
+		         *                    .toString();
+                 *message.addLink(url, "self");*/
+				message.addLink(getUriForSelf(uriInfo, message), "self");
+				return message;
+			}
+
+			private String getUriForSelf(UriInfo uriInfo, Message message) {
+				String url = uriInfo.getAbsolutePathBuilder()
+				                    .path(MessageResource.class)
+				                    .path(Long.toString(message.getId()))
+				                    .build()
+				                    .toString();
+				return url.toString();
+			}
+
+			private String getUriForComments(UriInfo uriInfo, Message message){
+				String url = uriInfo.getAbsolutePathBuilder()     // 'http://localhost:8080/webapi'
+									.path(MessageResource.class)                                 '/messages'
+				                    .path(MessageResource.class, "getCommentResource")	                  '/{messageId}/comments'
+				                    .path(CommentResource.class)                                 							   '/'
+				                    .resolveTemplate("messageId", message.getId())
+				                    .build()
+				                    .toString();
+			}
+
+	2.21 Content Negotiation
+	  Content Negotiation is a way in which a Client can ask a Server for a particular Content-Type in the response, it can also send content in different Content-Types to the server by telling what the Content-Type is. I kind of a negotiation/conversation that happens between the Client and the Server, for instance here a Client could say:
+	  ."Hey server, here's a JSON request. Send me JSON response back, please!!", so be sure whatever response you send me is in JSON format.
+	  Now the server could support JSON responses and say, ok you need JSON I got JSON and send the response back in JSON format or it could say I have no idea what JSON is, so it returns on error message, that's kind the interaction that happens between a Client and the Server. It's a negotiation so to speek and that's the reason why it's call Content-Negotiation.
+
+	    CLIENT 			    SERVER
+	    Accept 	      <->   @Produces        	
+	    Content-Type  <->   @Consumes
+
+	    MediaType.APPLICATION_JSON  -> "application/json"
+
+	    public final static String APPLICATION_JSON = "application/json";
+	    public final static String TEXT_PLAIN = "text/plain";
+	    public final static String TEXT_XML = "text/xml";
+
+	    -> According to GET messages definition, let's try to get an XML response:
+	      ...src/main/java/com.yourcompany.messenger.resources
+		    package com.yourcompany.messenger.resources;
+  
+		    @Path("/messages")
+		    @Consumes(MediaType.APPLICATION_JSON)
+		    @Produces(MediaType.APPLICATION_JSON)
+	  	    public class MessageResource {
+	  	      MessageService msgService = new MessageService();
+  
+			  @GET
+			  public List<Message> getMessages(@BeanParam MessageFilterBean msgFilterBean){
+				  ...
+				  return msgService.getAllMessages();
+			  }
+	  	    }
+  
+	        .URL 		-> http://localhost:8080/messenger/webapi/messages
+	        .Header 	-> Accept text/xml
+	        .Method   -> GET
+	        .Response => Server - Error report (HTTP Status 406 - Not Acceptable)
+
+	      .Notice how there is no definition to produce an XML response '@Produces(MediaType.APPLICATION_JSON)'
+	        What we can do is enhance this and say we're going to support XML as well
+	        So I can actually send as a bounch of values to @Produces
+
+	          @Produces(value = {MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
+
+	          Now the interesting about including this option is to enable you application to make calls to different methods according the Accept Header.
+
+	        ...
+	          @GET
+	          @Produces(MediaType.APPLICATION_JSON)
+			  public List<Message> getJSONMessages(@BeanParam MessageFilterBean msgFilterBean){
+				  System.out.println("JSON method called");
+				  ...
+				  return msgService.getAllMessages();
+			  }  
+
+			  @GET
+			  @Produces(MediaType.TEXT_XML)
+			  public List<Message> getXMLMessages(@BeanParam MessageFilterBean msgFilterBean){
+				  System.out.println("XML method called");
+				  ...
+
+				  return msgService.getAllMessages();
+			  }

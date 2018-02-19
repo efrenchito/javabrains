@@ -1,0 +1,1038 @@
+https://www.youtube.com/watch?v=Xuofihmkl_k&index=9&list=PL4AFF701184976B25
+Java Brains - Hibernate
+@1.Introduction to Hibernate
+  An Object Relational Mapping tool
+  Used in the data layer of applications
+  Implements Java Persistence API (JPA)
+
+  "Hibernate es una herramienta de mapeo objeto-relacional (ORM) para la plataforma Java (y disponible también para .Net con el nombre de NHibernate) que facilita el mapeo de atributos entre una base de datos relacional tradicional y el modelo de objetos de una aplicación, mediante archivos declarativos (XML) o anotaciones en los beans de las entidades que permiten establecer estas relaciones." Wikipedia
+
+  THE PROBLEM
+
+    User Class [ID, Name, Address, Phone, Date_of_Birth]
+    
+    Mapping member variables to columns -> A Class correspond to a table and a member field correspond to a column. 
+    Mapping relationships -> Foreign Keys...
+    Handling Data Types -> Converting between data types from Java to DataBase
+    Managing changes to object State
+
+@2.Setting Up Hibernate (Eclipse)
+  File>New Proyect (Java Proyect)
+    Project Name: FirstHibernateProj
+      Right click>Properties>Java Build Path [Libraries]
+        Add library [User Library]
+          Add External JARs -> hibernate-release-5.0.12.Final\lib\required
+        Add JDBC driver
+        //tnsnames.ora
+	        XE =  (DESCRIPTION =
+				    (ADDRESS = (PROTOCOL = TCP)(HOST = GsgPC-19)(PORT = 1521))
+				    (CONNECT_DATA =
+				      (SERVER = DEDICATED)
+				      (SERVICE_NAME = XE)
+				    )
+				  )
+
+@3.Writing a Hibernate Application
+  Saving without Hibernate
+    . JDBC Database configuration
+    . The Model Object
+    . Service method to create the model Object
+    . Database Design
+    . DAO method to save the object using SQL queries
+
+  The Hibernate way
+    . JDBC Database Configuration - Hibernate configuration
+    . The Model Object - Annotations
+    . Service method to create the model object - Use the Hibernate API
+    . Database design - Not needed!
+    . DAO method to save the object using SQL queries - Not needed!
+
+
+  -> Create the file Hibernate Configuration File:
+      Path: FirstHibernateProj/src/hibernate.cfg.xml
+        //hibernate.cfg.xml
+		  <?xml version="1.0" encoding="utf-8"?>
+		  <hibernate-configuration xmlns="" xsi:schemaLocation="" xmlns:xsi="">
+		    <session-factory>
+		      <property name=""></property>
+		      ...
+		      <!-- Database connection settings -->
+			  <property name="connection.driver_class">oracle.jdbc.pool.OracleDataSource</property>
+			  <property name="connection.url">jdbc:oracle:thin:@GsgPC-19:1521:XE</property>
+			  <property name="connection.username">sys</property>
+			  <property name="connection.password">system</property>
+			  <!-- JDBC connection pool (use the built-in) -->
+			  <!-- SQL dialect -->
+			  <!-- Enable Hibernate's automatic session context management (current_session_context_class)-->
+			  <!-- Disable the second-level cache  (cache.provider_class)-->
+			  <!-- Echo all executed SQL to stdout (show_sql)-->
+			  <!-- Drop and re-create the database schema on startup (hbm2ddl.auto)-->
+			  ...
+			  <!-- Names the annotated entity class -->
+		      <mapping classes="org.javabrains.dto.UserDetails" />
+		    </session-factory>
+		  </hibernate-configuration>
+
+  -> Creating the Model Class with Annotations (Entity/Id): 
+      Path: FirstHibernateProj/src/
+      Package: org.javabrains.dto
+      Class Name: UserDetails
+	    //UserDetails.java 
+	      package org.javabrains.dto;
+	      import javax.persistence.Entity;
+	      import javax.persistence.Id;
+	      @Entity
+	      public class UserDetails{
+	        @Id
+	        private int userId;
+	        private String userName;
+	        
+	        public int getUserId() {
+				return userId;
+			}
+			public void setUserId(int userId) {
+				this.userId = userId;
+			}
+			public String getUserName() {
+				return userName;
+			}
+			public void setUserName(String userName) {
+				this.userName = userName;
+			}
+	      }
+  -> Saving Objects using Hibernate APIs (HibernateTest.java):
+      Path: FirstHibernateProj/src/
+      Package: org.javabrains.hibernate;
+      Class Name: HibernateTest
+        //HibernateTest.java
+          package org.javabrains.hibernate;
+
+		  import org.javabrains.dto.UserDetails;
+		  import org.hibernate.SessionFactory;
+		  import org.hibernate.cfg.Configuration;
+		  import org.hibernate.Session;
+
+		  public class HibernateTest {
+			  public static void main(String[] args) {
+				  UserDetails user = new UserDetails();
+				  user.setUserId(1);
+				  user.setUserName("First User");
+  				
+				  SessionFactory sessionFactory = new   Configuration().configure().buildSessionFactory();
+		          Session session = sessionFactory.openSession();
+		          session.beginTransaction();
+		          session.save(user);
+		          session.getTransaction().commit();
+			  }
+		  }
+
+  Using the Hibernate API
+    Create a 'Session Factory'
+    Create a <<session>> from 'Session Factory'
+    Use the session to save model objects
+
+@4.Configuration and Annotations
+    Hibernate Configuration
+      //FirstHibernateProj/src/hibernate.cfg.xml
+	    ...
+	    <property name="show_sql">true</property>
+	      <!-- Outputs on the log the relational sentence executed -->
+	    <property name="hbm2ddl.auto">update | create</property>
+	      <!-- create -> Drop everything and then re-creates everything from scratch -->
+	      <!-- update -> If Hibernate founds a change in the model then recerates it. -->
+
+    Annotations
+      There are two ways to add anotations in Hibernate Field Declaration/Getter Declaration.
+      Let's see an example of both of them:
+        //UserDetails.java -> Field Declaration Annotations
+          package org.javabrains.dto;
+          import javax.persistence.Entity;
+          import javax.persistence.Id;
+          @Entity (name = "USER_DETAILS" )
+          public class UserDetails{
+            @Id
+            @Column (name = "USER_ID")
+            private int userId;
+            @Column (name = "USER_NAME")
+            private String userName;
+            
+            public int getUserId() {
+			    return userId;
+		    }
+		    public void setUserId(int userId) {
+			    this.userId = userId;
+		    }
+		    public String getUserName() {
+			    return userName;
+		    }
+		    public void setUserName(String userName) {
+			    this.userName = userName;
+		    }
+          }
+        //UserDetails.java -> Getter Declaration Annotations
+          package org.javabrains.dto;
+          import javax.persistence.Entity;
+          import javax.persistence.Id;
+          @Entity (name = "USER_DETAILS" )
+          public class UserDetails{
+            @Id
+            private int userId;
+            private String userName;
+            
+            @Column (name = "USER_ID")
+            public int getUserId() {
+			    return userId;
+		    }
+		    public void setUserId(int userId) {
+			    this.userId = userId;
+		    }
+		    @Column (name = "USER_NAME")
+		    public String getUserName() {
+			    return userName + " from getter";
+		    }
+		    public void setUserName(String userName) {
+			    this.userName = userName;
+		    }
+          } 
+    @Table (name = "USER_DETAILS") VS @Entity (name = "USER_DETAILS")
+      -> You can have a name for the Entity/Table, by default @Entity (name = "") will be used for table as well
+    @Basic - Treats a field as needed to Persist and apply the Hibernate defaults is like if you don's specify any annotation
+      However there are two properties whitin the @Basic annotation 
+        fetch    ->
+        optional ->
+    @Transient - If you use transient or have any static field in your class hibernate will not automatically persist it
+    @Temporal - Allows you to specify part of a date (DATE,TIME,TIMESTAMP)
+    @Lob - Basically means that this is a large Object (clob, blob)
+
+    //UserDetails.java
+      package org.javabrains.dto;
+      import java.util.Date;
+      import javax.persistence.Entity;
+      import javax.persistence.Id;
+      @Entity
+      public class UserDetails{
+        @Id
+        private int userId;
+        private String userName;
+        private Date joinedDate;
+		private String Address;
+		private String description;
+        public int getUserId() {
+			return userId;
+		}
+		public void setUserId(int userId) {
+			this.userId = userId;
+		}
+		public String getUserName() {
+			return userName;
+		}
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+      }
+
+@5.Retrieving Objects using session.get()
+    This is one of the ways in which we can fetch data in hibernate <<< session.get() >>>
+    There are a lot of other options where we can run what is called Hibernate Query Language Queries (HQL)
+    we can also write SQL Queries directly so we'll look at all these other options later.
+
+    //HibernateTest.java
+      package org.javabrains.hibernate;
+  
+      import org.hibernate.Session;
+      import org.hibernate.SessionFactory;
+      import org.hibernate.cfg.Configuration;
+      import org.javabrains.UserDetails;
+  
+      public HibernateTest class{
+        
+        public static void main(String[] args){
+      	  UserDetails user = new UserDetails();
+      	  user.setUserId(1);
+      	  user.setUserName("First User");
+  
+          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+          Session session = sessionFactory.openSession();
+          session.beginTransaction();
+          session.save(user);
+          session.getTransaction().commit();
+          session.close();
+  
+          user = null;
+
+          session = sessionFactory.openSession();
+          session.beginTransaction();
+          user = (UserDetails) session.get(UserDetails.class, 1);
+          System.out.println("User Name retrieved is " + user.getUserName());
+          session.close();
+        }  
+      }
+
+@6.Primary Keys
+  Natural keys vs Surrogate keys
+    //UserDetails.java
+      package org.javabrains.dto;
+      import java.util.Date;
+      import javax.persistence.Entity;
+      import javax.persistence.Id;
+      @Entity
+      public class UserDetails{
+        @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+        private int userId;
+        private String userName;
+        private Date joinedDate;
+		private String Address;
+		private String description;
+        public int getUserId() {
+			return userId;
+		}
+		public void setUserId(int userId) {
+			this.userId = userId;
+		}
+		public String getUserName() {
+			return userName;
+		}
+		public void setUserName(String userName) {
+			this.userName = userName;
+		}
+      }
+   
+    GenerationType.Auto: Is the strategy by default. It just means that we will let hibernate make a decision 
+   					    as to what is the strategy it needs to use in order to come up with these unique primaryKeys.
+    GenerationType.Identity: Means that hibernate is going to use identity columns, a feature provided in some DB.
+    					SQL Server & MySQL provide identity column features
+    GenerationType.Sequence: It uses the Sequence Object in the DB in order to come up with unique key
+    GenerationType.Table: You can have a separate table and that table will have record of what is the last primary key
+                        so that you can increment it and get the next value
+
+@8.Value Types and Embedding Objects
+    So far...
+      We've learned how to write a model object, and we've learned how to annotate various fields on the Model Object.
+      So Hibernate creates a table for us and then we do the mapping, we've learned how to save this model object into 
+      the DataBase, and we also have learned how to retrieve data from the database and create Model Objects with the 
+      data populated all that using hibernate APIs.
+    Entity & Value Objects
+        Entity: An Object that needs persist, so it must be saved as a separate table. 
+          It's independent and contains data that provides meaning about itself.
+        Value Object: Has data and either needs to be saved to the Database. 
+          It doesn't have meaning on as itself. It provides meaning to some other object.
+          -> If you have an Adress, then you will ask whose address?
+      What happen when the member variables inside the Model Object are no just Primitive Data Types or String|Date Objects
+      and cannot be represented as a Single Column, let's say a member variable is an Object which contains a few member vars
+      how will you save that using hibernate? -> There are a few permutations and combinations when it comes to have objects
+      inside objects or any of these Collection Objects inside our Model object.
+  
+      Approaches
+        User Class -> [ID,Name,Adress(Street,City,State,PinCode),Phone,Date of Birth]
+        Separate Columns Approach:
+          Treat the member variables of Address in the same way as you would treat member variables of the user class.
+          Now this Scenario works fine if the object inside the Class is a value Object
+  	        //Address1.java
+	          packate org.javabrains.dto;
+	          import javax.persistance.Embeddable;
+	          @Embeddable
+	          public class Address{
+	            private String street;
+		        private String city;
+		        private String state;
+		        private String pincode;
+    
+		        public String getStreet(){
+		          return street;
+		        }
+		        public void setStreet(String street){
+		          this.street = street;
+		        }
+		        public String getCity(){
+		          return city;
+		        }
+		        public void setCity(String city){
+		          this.city = city;
+		        }
+		        public String getState(){
+		          return state;
+		        }
+		        public void setState(String state){
+		          this.state = state;
+		        }
+		        public String getPincode(){
+		          return pincode;
+		        }
+		        public void setPincode(String pincode){
+		          this.pincode = pincode;
+		        }
+  	          }
+  	        //UserDetails1.java
+	          package org.javabrains.dto;
+	          import java.util.Date;
+	          import javax.persistence.Entity;
+	          import javax.persistence.Id;
+	          import javax.persistence.Embedded;
+	          @Entity
+	          public class UserDetails{
+	            @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+	            private int userId;
+	            private String userName;
+	            @Embedded
+			    private Address address;
+	            public int getUserId() {
+				    return userId;
+			    }
+			    public void setUserId(int userId) {
+				    this.userId = userId;
+			    }
+			    public String getUserName() {
+				    return userName;
+			    }
+			    public void setUserName(String userName) {
+				    this.userName = userName;
+			    }
+			    public Address getAddress() {
+				    return address;
+			    }
+			    public void setAddress(Addres address) {
+				    this.address = address;
+			    }
+	          }
+  	        //HibernateTest1.java
+	          package org.javabrains.hibernate;
+    	  
+	          import org.hibernate.Session;
+	          import org.hibernate.SessionFactory;
+	          import org.hibernate.cfg.Configuration;
+	          import org.javabrains.dto.UserDetails;
+	          import org.javabrains.dto.Address;
+    	  
+	          public HibernateTest class{
+    	        
+	            public static void main(String[] args){
+	      	      UserDetails user = new UserDetails();
+	      	      user.setUserId(1);
+	      	      user.setUserName("First User");
+    	      	  
+	      	      Address addr = new Address();
+	      	      addr.setStreet("Street Name");
+	      	      addr.setCity("City Name");
+    
+	      	      user.setAddres(addr);
+    	  
+	              SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+	              Session session = sessionFactory.openSession();
+	              session.beginTransaction();
+	              session.save(user);
+	              session.getTransaction().commit();
+	              session.close();
+    	  
+	              user = null;
+    
+	              session = sessionFactory.openSession();
+	              session.beginTransaction();
+	              user = (UserDetails) session.get(UserDetails.class, 1);
+	              System.out.println("User Name retrieved is " + user.getUserName());
+	            }  
+  	          }
+    
+      Now, how we can define the column names for our value object, and what about home/office address inside User.
+
+	    //Address2.java
+	      packate org.javabrains.dto;
+	      import javax.persistance.Embeddable;
+	      @Embeddable
+	      public class Address{
+	        @Column (name="STREET_NAME")
+	        private String street;
+	        @Column (name="CITY_NAME")
+		    private String city;
+		    @Column (name="STATE_NAME")
+		    private String state;
+		    @Column (name="PIN_CODE")
+		    private String pincode;
+
+		    public String getStreet(){
+		      return street;
+		    }
+		    public void setStreet(String street){
+		      this.street = street;
+		    }
+		    public String getCity(){
+		      return city;
+		    }
+		    public void setCity(String city){
+		      this.city = city;
+		    }
+		    public String getState(){
+		      return state;
+		    }
+		    public void setState(String state){
+		      this.state = state;
+		    }
+		    public String getPincode(){
+		      return pincode;
+		    }
+		    public void setPincode(String pincode){
+		      this.pincode = pincode;
+		    }
+	      }
+	    //UserDetails2.java
+	      package org.javabrains.dto;
+	      import java.util.Date;
+	      import javax.persistence.Entity;
+	      import javax.persistence.Id;
+	      import javax.persistence.Embedded;
+	      import javax.persistence.AttributeOverrides;
+	      import javax.persistence.AttributeOverride;
+	      @Entity
+	      public class UserDetails{
+	        @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+	        private int userId;
+	        private String userName;
+	        @Embedded
+	        @AttributeOverrides({
+	           @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME"))
+	          ,@AttributeOverride(name="city",   column=@Column(name="HOME_CITY_NAME"))
+	          ,@AttributeOverride(name="state",  column=@Column(name="HOME_STATE_NAME"))
+	          ,@AttributeOverride(name="pincode",column=@Column(name="HOME_PIN_CODE_NAME"))
+	        })
+			private Address homeAddress;
+			@Embedded
+			private Address officeAddress;
+	        public int getUserId() {
+				return userId;
+			}
+			public void setUserId(int userId) {
+				this.userId = userId;
+			}
+			public String getUserName() {
+				return userName;
+			}
+			public void setUserName(String userName) {
+				this.userName = userName;
+			}
+			public Address getHomeAddress() {
+				return homeAddress;
+			}
+			public void setHomeAddress(Addres homeAddress) {
+				this.homeAddress = homeAddress;
+			}
+			public Address getOfficeAddress() {
+				return homeAddress;
+			}
+			public void setOfficeAddress(Addres officeAddress) {
+				this.officeAddress = officeAddress;
+			}
+	      }
+	    //HibernateTest2.java
+	      package org.javabrains.hibernate;
+	  
+	      import org.hibernate.Session;
+	      import org.hibernate.SessionFactory;
+	      import org.hibernate.cfg.Configuration;
+	      import org.javabrains.dto.UserDetails;
+	      import org.javabrains.dto.Address;
+	  
+	      public HibernateTest class{
+	        
+	        public static void main(String[] args){
+	      	  UserDetails user = new UserDetails();
+	      	  user.setUserId(1);
+	      	  user.setUserName("First User");
+	      	  
+	      	  Address addr1 = new Address();
+	      	  addr1.setStreet("Home Street Name");
+	      	  addr1.setCity("Home City Name");
+	      	  user.setHomeAddres(addr1);
+
+	      	  Address addr2 = new Address();
+	      	  addr2.setStreet("Office Street Name");
+	      	  addr2.setCity("Office City Name");
+	      	  user.setOfficeAddres(addr2);
+	  
+	          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(user);
+	          session.getTransaction().commit();
+	          session.close();
+	  
+	          user = null;
+
+	          session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          user = (UserDetails) session.get(UserDetails.class, 1);
+	          System.out.println("User Name retrieved is " + user.getUserName());
+	        }  
+	      }
+
+      Remember we can use something call @EmbeddedId
+
+@9.Saving Collections
+    Let's see how we can implemente these feature when we don't know the exact qty of Address for a user.
+    In this case we're going to define a collection of Addresses.
+    	      //Address1.java
+	      packate org.javabrains.dto;
+	      import javax.persistence.Embeddable;
+	      import javax.persistence.Column:
+	      @Embeddable
+	      public class Address{
+
+	        @Column (name="STREET_NAME")
+	        private String street;
+	        @Column (name="CITY_NAME")
+		    private String city;
+		    @Column (name="STATE_NAME")
+		    private String state;
+		    @Column (name="PIN_CODE")
+
+		    public String getStreet(){
+		      return street;
+		    }
+		    public void setStreet(String street){
+		      this.street = street;
+		    }
+		    public String getCity(){
+		      return city;
+		    }
+		    public void setCity(String city){
+		      this.city = city;
+		    }
+		    public String getState(){
+		      return state;
+		    }
+		    public void setState(String state){
+		      this.state = state;
+		    }
+		    public String getPincode(){
+		      return pincode;
+		    }
+		    public void setPincode(String pincode){
+		      this.pincode = pincode;
+		    }
+	      }
+  	      //UserDetails1.java
+	      package org.javabrains.dto;
+	      import java.util.Date;
+	      import javax.persistence.Entity;
+	      import javax.persistence.Id;
+	      import javax.persistence.ElementCollection;
+	      @Entity
+	      public class UserDetails{
+	        @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+	        private int userId;
+	        private String userName;
+	        @ElementCollection
+			private Set<Address> listOfAddresses = new HashSet<Address>();
+	        
+	        public int getUserId() {
+				return userId;
+			}
+			public void setUserId(int userId) {
+				this.userId = userId;
+			}
+			public String getUserName() {
+				return userName;
+			}
+			public void setUserName(String userName) {
+				this.userName = userName;
+			}
+			public Set<Address> getListOfAddresses(){
+			  return listOfAddresses;
+			}
+			public void setListOfAddresses(Set<Address> listOfAddresses){
+			  this.listOfAddresses = listOfAddresses;
+			}
+	      }
+  	      //HibernateTest1.java
+	      package org.javabrains.hibernate;
+	  
+	      import org.hibernate.Session;
+	      import org.hibernate.SessionFactory;
+	      import org.hibernate.cfg.Configuration;
+	      import org.javabrains.dto.UserDetails;
+	      import org.javabrains.dto.Address;
+	  
+	      public HibernateTest class{
+	        
+	        public static void main(String[] args){
+	      	  UserDetails user = new UserDetails();
+	      	  user.setUserId(1);
+	      	  user.setUserName("First User");
+	      	  
+	      	  Address addr1 = new Address();
+	      	  addr1.setStreet("First Street");
+	      	  addr1.setCity("First City");
+	      	  addr1.setState("First STate");
+	      	  addr1.setPincode("100001");
+
+	      	  Address addr2 = new Address();
+	      	  addr2.setStreet("Second Street");
+	      	  addr2.setCity("Second City");
+	      	  addr2.setState("Second State");
+	      	  addr2.setPincode("200002");
+
+	      	  user.getListOfAddresses().add(addr1);
+	      	  user.getListOfAddresses().add(addr2);
+	  
+	          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(user);
+	          session.getTransaction().commit();
+	          session.close();
+	  
+	          user = null;
+
+	          session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          user = (UserDetails) session.get(UserDetails.class, 1);
+	          System.out.println("User Name retrieved is " + user.getUserName());
+	        }  
+	      }
+      
+      In order to configure Collections Table/Column Names
+            //HowToConfigure Table&Column Names
+          @ElementCollection
+          @JoinTable(name="USER_ADDRESS
+                	,joinColumns=@JoinColumn(name="USER_ID")
+                	)
+	  	  private Set<Address> listOfAddresses = new HashSet<Address>();
+  
+    Adding Keys to Collections
+      Hibernate implements the JPA standards, so eventhough we are using the JPA annotations the implementer of all these
+      is Hibernate, because we've added the Hibernate library, so it interpretes the JPA annotations.
+      Now, the feature <<<Keys for Collections>>> is not provided by JPA, this is an additional feature provided by Hibernate
+      alone, so if you change your implementer from Hibernate to something else, all the annotations provided by JPA will work
+      but @Collection will not, because it's specific to hibernate. However is always better to use a JPA standard because 
+      that'll leave us with less things to change when change or JPA provider.
+  
+      In order to have a Collection of objects as a member variable inside your entity class:
+      1.Ensure you're using a collection data type that supports indexes HashSet -> ArrayList
+      2.Use the CollectionId annotation and define its columns, generator and type attributes
+
+  	    //Address2.java
+	      packate org.javabrains.dto;
+	      import javax.persistence.Embeddable;
+	      import javax.persistence.Column:
+	      @Embeddable
+	      public class Address{
+
+	        @Column (name="STREET_NAME")
+	        private String street;
+	        @Column (name="CITY_NAME")
+		    private String city;
+		    @Column (name="STATE_NAME")
+		    private String state;
+		    @Column (name="PIN_CODE")
+
+		    public String getStreet(){
+		      return street;
+		    }
+		    public void setStreet(String street){
+		      this.street = street;
+		    }
+		    public String getCity(){
+		      return city;
+		    }
+		    public void setCity(String city){
+		      this.city = city;
+		    }
+		    public String getState(){
+		      return state;
+		    }
+		    public void setState(String state){
+		      this.state = state;
+		    }
+		    public String getPincode(){
+		      return pincode;
+		    }
+		    public void setPincode(String pincode){
+		      this.pincode = pincode;
+		    }
+	      }
+	    //UserDetails2.java
+	      package org.javabrains.dto;
+	      import java.util.Date;
+	      import javax.persistence.Entity;
+	      import javax.persistence.Id;
+	      import javax.persistence.ElementCollection;
+	      import javax.persistence.JoinTable;
+	      import javax.persistence.JoinColumns;
+
+	      import org.hibernate.annotations.CollectionId;
+	      import org.hibernate.annotations.GenericGenerator;
+	      import org.hibernate.annotations.Type;
+	      @Entity
+	      public class UserDetails{
+	        @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+	        private int userId;
+	        private String userName;
+	        @ElementCollection
+	        @JoinTable(name="USER_ADDRESS"
+	                  ,JoinColumns=@JoinColumn(name="USER_ID")
+	                  )
+	        @GenericGenerator(name="hilo-gen", strategy="hilo")
+	        @CollectionId(columns={@Column(name="ADDRESS_ID")}, generator="hilo-gen", type=@Type(type="long"))
+			private Collection<Address> listOfAddresses = new ArrayList<Address>();
+	        
+	        public int getUserId() {
+				return userId;
+			}
+			public void setUserId(int userId) {
+				this.userId = userId;
+			}
+			public String getUserName() {
+				return userName;
+			}
+			public void setUserName(String userName) {
+				this.userName = userName;
+			}
+			public Collection<Address> getListOfAddresses(){
+			  return listOfAddresses;
+			}
+			public void setListOfAddresses(Collection<Address> listOfAddresses){
+			  this.listOfAddresses = listOfAddresses;
+			}
+	      }
+	    //HibernateTest2.java
+	      package org.javabrains.hibernate;
+	  
+	      import org.hibernate.Session;
+	      import org.hibernate.SessionFactory;
+	      import org.hibernate.cfg.Configuration;
+	      import org.javabrains.dto.UserDetails;
+	      import org.javabrains.dto.Address;
+	  
+	      public HibernateTest class{
+	        
+	        public static void main(String[] args){
+	      	  UserDetails user = new UserDetails();
+	      	  user.setUserId(1);
+	      	  user.setUserName("First User");
+	      	  
+	      	  Address addr1 = new Address();
+	      	  addr1.setStreet("First Street");
+	      	  addr1.setCity("First City");
+	      	  addr1.setState("First STate");
+	      	  addr1.setPincode("100001");
+
+	      	  Address addr2 = new Address();
+	      	  addr2.setStreet("Second Street");
+	      	  addr2.setCity("Second City");
+	      	  addr2.setState("Second State");
+	      	  addr2.setPincode("200002");
+
+	      	  user.getListOfAddresses().add(addr1);
+	      	  user.getListOfAddresses().add(addr2);
+	  
+	          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(user);
+	          session.getTransaction().commit();
+	          session.close();
+	  
+	          user = null;
+
+	          session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          user = (UserDetails) session.get(UserDetails.class, 1);
+	          System.out.println("User Name retrieved is " + user.getUserName());
+
+
+	        }  
+	      }
+
+@10.Proxy objects and Eager and Lazy Fetch Types
+    Fetch Types
+      When session.get() is invoked, is he retrieving all the collection's information associated?
+      Now it's important to have in consideration the cost of doing this, a particular user could have a lot of addreses for 
+      example so if I don't need this information the session.get() method will decrease its performance unnecesary, so Hibernate
+      implements a <<<Fetch Strategy>>>. -> @ElementCollection (fetch=FetchType.EAGER|LAZY)
+    
+            -> Lazy Initialization
+      L.I means that you don't initialize the entire object, you just initialize the first level of member variables, so you only
+      initialize a collection when you actually access it.
+      Hibernate implies a strategy to solve this problem now if you want to use just the user information you can ask Hibernate 
+      to pull up not all the information, in fact that is the default behavior of hibernate unless you configure it otherwise.
+      You retrieve collection information from Database only when you'll use it.
+        ...
+        user = (UserDetails) session.get(UserDetails.class, 1); -> Retrieve only the user data not the collection of addreses
+        session.getListOfAddress(); -> Retrieve all the addresses Collection
+        ...
+            -> Eager Initialization
+      E.I means you initialize the entire object. and initialize every collection within the Object.
+      You must to remember that this could take a lot of time, so you should do this only if needed.
+      
+      Now if you try to access a Collection without a open session after calling a session.get() method it will throws a
+      org.hibernate.LazyInitialException() at least you define to fetch the data in a Eager strategy
+    
+        session.openFactory();
+        user = (UserDetails)session.get(UserDetails.class, 1);
+        session.close();
+        System.out.println(user.getListOfAddreses().size()); 
+          //FetchType.Eager will ouput the actual size
+          //FetchType.Lazy will throws the Exception
+    Proxy Classes
+	  Hibernate implements Lazy & Eager initialization through the use of a Proxy class. 
+	  That means instead of getting the actual object that you're requesting for it gets you that object information through a proxy.
+
+		DataBase <-  Proxy User Class  <-  User Class
+		              getId()				 getId()
+		              getName()			     getName()
+		              getListOfAddreses()    getListOfAddreses()
+
+    //UserDetails.java
+	    package org.javabrains.dto;
+	    import java.util.Date;
+	    import javax.persistence.Entity;
+	    import javax.persistence.Id;
+	    import javax.persistence.ElementCollection;
+	    import javax.persistence.JoinTable;
+	    import javax.persistence.JoinColumns;
+
+	    import org.hibernate.annotations.CollectionId;
+	    import org.hibernate.annotations.GenericGenerator;
+	    import org.hibernate.annotations.Type;
+	    @Entity
+	    public class UserDetails{
+	      @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+	      private int userId;
+	      private String userName;
+	      @ElementCollection (fetch=FetchType.EAGER)
+	      @JoinTable(name="USER_ADDRESS"
+	                ,JoinColumns=@JoinColumn(name="USER_ID")
+	                )
+	      @GenericGenerator(name="hilo-gen", strategy="hilo")
+	      @CollectionId(columns={@Column(name="ADDRESS_ID")}, generator="hilo-gen", type=@Type(type="long"))
+			private Collection<Address> listOfAddresses = new ArrayList<Address>();
+	      
+	      public int getUserId() {
+		    return userId;
+		  }
+		  public void setUserId(int userId) {
+			this.userId = userId;
+		  }
+		  public String getUserName() {
+			return userName;
+		  }
+		  public void setUserName(String userName) {
+			this.userName = userName;
+		  }
+		  public Collection<Address> getListOfAddresses(){
+		    return listOfAddresses;
+		  }
+		  public void setListOfAddresses(Collection<Address> listOfAddresses){
+		    this.listOfAddresses = listOfAddresses;
+		  }
+	    }
+    //HibernateTest2.java
+      package org.javabrains.hibernate;
+  
+      import org.hibernate.Session;
+      import org.hibernate.SessionFactory;
+      import org.hibernate.cfg.Configuration;
+      import org.javabrains.dto.UserDetails;
+      import org.javabrains.dto.Address;
+  
+      public HibernateTest class{
+        
+        public static void main(String[] args){
+      	  UserDetails user = new UserDetails();
+      	  user.setUserId(1);
+      	  user.setUserName("First User");
+      	  
+      	  Address addr1 = new Address();
+      	  addr1.setStreet("First Street");
+      	  addr1.setCity("First City");
+      	  addr1.setState("First STate");
+      	  addr1.setPincode("100001");
+
+      	  Address addr2 = new Address();
+      	  addr2.setStreet("Second Street");
+      	  addr2.setCity("Second City");
+      	  addr2.setState("Second State");
+      	  addr2.setPincode("200002");
+
+      	  user.getListOfAddresses().add(addr1);
+      	  user.getListOfAddresses().add(addr2);
+  
+          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+          Session session = sessionFactory.openSession();
+          session.beginTransaction();
+          session.save(user);
+          session.getTransaction().commit();
+          session.close();
+  
+          user = null;
+
+          session = sessionFactory.openSession();
+          session.beginTransaction();
+          user = (UserDetails) session.get(UserDetails.class, 1);
+          System.out.println("User Name retrieved is " + user.getUserName());
+          
+          System.out.println(user.getListOfAddresses().size());
+
+
+
+
+        }  
+      }
+
+
+https://www.youtube.com/watch?v=CfGDZmPj3Qw&index=1&list=PLTd5ehIj0goPcnQs34i0F-Kgp5JHX8UUv
+MAKIGAS - Hibernate
+Los Datos y la información y su uso hoy en dia.
+Serializar una serie de datos en algun tipo de archivo (formato XML/JSON)
+Guardarlos de forma serializada con algún tipo de implementación binaria particular
+ - Protocol Buffer
+ - Kiro
+ - Java API Serializable
+Bases de Datos/Almacen de Datos
+  - JDBC API
+  - Sentencias SQL
+  - DAOS,ActiveRecord
+ORM
+  JPA: Un API que permite almacenar informació de forma persistente, simplemente etiquetando c/u
+  de los elementos que necesitamos recordar.
+  Luego necesita una libreria que implementará lo que JPA ha definido
+  HIBERNATE: Es uno de los ORM's más populares en este momento
+
+Eclipse >New Maven Project
+  [CHECK] Create a simple project (skyp archetype selection)
+  Artifact:
+  Group Id:  org.nerfe
+  Artifact Id: hibernate-jpa
+  Version: 1.0.0-SNAPSHOT
+  Packaging: jar
+  Name:
+  Description
+
+Proyect Object Model
+  //pom.xml
+	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema..."
+	  <modelVersion>4.0.0</modelVersion>
+	  <groupId>org.nerfe</groupId>
+	  <artifactId>hibernate-jpa</artifactId>
+	  <version>1.0.0-SNAPSHOT</version>
+	  <dependencies>
+	    <dependency>groupId->artifactId->versions</dependency>
+	    <dependency>groupId->artifactId->versions</dependency>
+	     hibernate-core-> org.hibernate->5.1.0.Final
+	     hibernate-entitymanager->org.hibernate->5.1.0.Final
+	     h2->com.h2database->1.4.191
+	     persistence-api->javax.persistence->1.0.2
+	  </dependencies>
+	  <build>
+		<plugins>
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-compiler-plugin</artifactId>
+	        <version>3.7.0</version>
+	        <configuration>
+	          <!-- or whatever version you use -->
+	          <source>1.8</source>
+	          <target>1.8</target>
+	        </configuration>
+	      </plugin>
+	    </plugins>
+	  </build>
+  </project>
