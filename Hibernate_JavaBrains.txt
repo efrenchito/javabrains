@@ -1,4 +1,63 @@
 https://www.youtube.com/watch?v=Xuofihmkl_k&index=9&list=PL4AFF701184976B25
+https://www.youtube.com/watch?v=CfGDZmPj3Qw&index=1&list=PLTd5ehIj0goPcnQs34i0F-Kgp5JHX8UUv
+MAKIGAS - Hibernate
+  Los Datos y la información y su uso hoy en dia.
+  Serializar una serie de datos en algun tipo de archivo (formato XML/JSON)
+  Guardarlos de forma serializada con algún tipo de implementación binaria particular
+   - Protocol Buffer
+   - Kiro
+   - Java API Serializable
+  Bases de Datos/Almacen de Datos
+    - JDBC API
+    - Sentencias SQL
+    - DAOS,ActiveRecord
+  ORM
+    JPA: Un API que permite almacenar informació de forma persistente, simplemente etiquetando c/u
+    de los elementos que necesitamos recordar.
+    Luego necesita una libreria que implementará lo que JPA ha definido
+    HIBERNATE: Es uno de los ORM's más populares en este momento
+  
+  Eclipse >New Maven Project
+    [CHECK] Create a simple project (skyp archetype selection)
+    Artifact:
+    Group Id:  org.nerfe
+    Artifact Id: hibernate-jpa
+    Version: 1.0.0-SNAPSHOT
+    Packaging: jar
+    Name:
+    Description
+
+  Proyect Object Model
+    //pom.xml
+	  <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema..."
+	    <modelVersion>4.0.0</modelVersion>
+	    <groupId>org.nerfe</groupId>
+	    <artifactId>hibernate-jpa</artifactId>
+	    <version>1.0.0-SNAPSHOT</version>
+	    <dependencies>
+	      <dependency>groupId->artifactId->versions</dependency>
+	      <dependency>groupId->artifactId->versions</dependency>
+	       hibernate-core-> org.hibernate->5.1.0.Final
+	       hibernate-entitymanager->org.hibernate->5.1.0.Final
+	       h2->com.h2database->1.4.191
+	       persistence-api->javax.persistence->1.0.2
+	    </dependencies>
+	    <build>
+		  <plugins>
+	        <plugin>
+	          <groupId>org.apache.maven.plugins</groupId>
+	          <artifactId>maven-compiler-plugin</artifactId>
+	          <version>3.7.0</version>
+	          <configuration>
+	            <!-- or whatever version you use -->
+	            <source>1.8</source>
+	            <target>1.8</target>
+	          </configuration>
+	        </plugin>
+	      </plugins>
+	    </build>
+    </project>
+
 Java Brains - Hibernate
 @1.Introduction to Hibernate
   An Object Relational Mapping tool
@@ -568,8 +627,8 @@ Java Brains - Hibernate
 @9.Saving Collections
     Let's see how we can implemente these feature when we don't know the exact qty of Address for a user.
     In this case we're going to define a collection of Addresses.
-    	      //Address1.java
-	      packate org.javabrains.dto;
+    	//Address1.java
+	      package org.javabrains.dto;
 	      import javax.persistence.Embeddable;
 	      import javax.persistence.Column:
 	      @Embeddable
@@ -608,7 +667,7 @@ Java Brains - Hibernate
 		      this.pincode = pincode;
 		    }
 	      }
-  	      //UserDetails1.java
+  	    //UserDetails1.java
 	      package org.javabrains.dto;
 	      import java.util.Date;
 	      import javax.persistence.Entity;
@@ -641,7 +700,7 @@ Java Brains - Hibernate
 			  this.listOfAddresses = listOfAddresses;
 			}
 	      }
-  	      //HibernateTest1.java
+  	    //HibernateTest1.java
 	      package org.javabrains.hibernate;
 	  
 	      import org.hibernate.Session;
@@ -689,11 +748,9 @@ Java Brains - Hibernate
 	      }
       
       In order to configure Collections Table/Column Names
-            //HowToConfigure Table&Column Names
+        //HowToConfigure Table&Column Names
           @ElementCollection
-          @JoinTable(name="USER_ADDRESS
-                	,joinColumns=@JoinColumn(name="USER_ID")
-                	)
+          @JoinTable(name="USER_ADDRESS, joinColumns=@JoinColumn(name="USER_ID")                	)
 	  	  private Set<Address> listOfAddresses = new HashSet<Address>();
   
     Adding Keys to Collections
@@ -757,8 +814,8 @@ Java Brains - Hibernate
 	      import javax.persistence.JoinTable;
 	      import javax.persistence.JoinColumns;
 
-	      import org.hibernate.annotations.CollectionId;
 	      import org.hibernate.annotations.GenericGenerator;
+	      import org.hibernate.annotations.CollectionId;
 	      import org.hibernate.annotations.Type;
 	      @Entity
 	      public class UserDetails{
@@ -766,9 +823,7 @@ Java Brains - Hibernate
 	        private int userId;
 	        private String userName;
 	        @ElementCollection
-	        @JoinTable(name="USER_ADDRESS"
-	                  ,JoinColumns=@JoinColumn(name="USER_ID")
-	                  )
+	        @JoinTable(name="USER_ADDRESS",JoinColumns=@JoinColumn(name="USER_ID"))
 	        @GenericGenerator(name="hilo-gen", strategy="hilo")
 	        @CollectionId(columns={@Column(name="ADDRESS_ID")}, generator="hilo-gen", type=@Type(type="long"))
 			private Collection<Address> listOfAddresses = new ArrayList<Address>();
@@ -841,7 +896,15 @@ Java Brains - Hibernate
 	        }  
 	      }
 
-@10.Proxy objects and Eager and Lazy Fetch Types
+@10.Proxy Objects and Fetch Types (Eager/Lazy)
+    Proxy Classes
+	  Hibernate implements Lazy & Eager initialization through the use of a Proxy class. 
+	  That means instead of getting the actual object that you're requesting for it gets you that object information through a proxy.
+
+		DataBase <-  Proxy User Class  <-  User Class
+		              getId()				 getId()
+		              getName()			     getName()
+		              getListOfAddreses()    getListOfAddreses()
     Fetch Types
       When session.get() is invoked, is he retrieving all the collection's information associated?
       Now it's important to have in consideration the cost of doing this, a particular user could have a lot of addreses for 
@@ -871,14 +934,6 @@ Java Brains - Hibernate
         System.out.println(user.getListOfAddreses().size()); 
           //FetchType.Eager will ouput the actual size
           //FetchType.Lazy will throws the Exception
-    Proxy Classes
-	  Hibernate implements Lazy & Eager initialization through the use of a Proxy class. 
-	  That means instead of getting the actual object that you're requesting for it gets you that object information through a proxy.
-
-		DataBase <-  Proxy User Class  <-  User Class
-		              getId()				 getId()
-		              getName()			     getName()
-		              getListOfAddreses()    getListOfAddreses()
 
     //UserDetails.java
 	    package org.javabrains.dto;
@@ -970,69 +1025,993 @@ Java Brains - Hibernate
           System.out.println("User Name retrieved is " + user.getUserName());
           
           System.out.println(user.getListOfAddresses().size());
-
-
-
-
         }  
       }
 
+@11.Mapping
+    -> Just Two Separate Entities
+        //Vehicle1.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class Vehicle{
+            @Id @GeneratedValue
+            private int vehicleId;
+            private String vehicleName;
+            public int getVehicleId(){
+              return this.vehicleId;
+            }
+            public void setVehicleId(int vehicleId){
+              this.vehicleId = vehicleId;
+            }
+            public String getVehicleName(){
+              return this.vehicleName;
+            }
+            public void setVehicleName(String vehicleName){
+              this.vehicleName = vehicleName;
+            }
+          }
+        //UserDetails1.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue
+            private int userId;
+            private String userName;
+            public int getUserId(){
+              return this.userId;
+            }
+            public void setUserId(int userId){
+              this.userId = userId;
+            }
+            public String getUserName(){
+              return this.userName;
+            }
+            public void setUserName(String userName){
+              this.userName = userName;
+            }
+          }
+        //HibernateTest1.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{
+	        public static void main(String[] args){
+	          UserDetails user = new UserDetails();
+	          user.setUserName("First User");
+  
+	          Vehicle vehicle = new Vehicle();
+	          vehicle.setVehicleName("iCar");
+  
+	          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(user);
+	          session.save(vehicle);
+	          session.getTransaction().commit();
+	          session.close();
+	      ...
+	    //Console Output_1
+	      Hibernate: select nextval ('hibernate_sequence')
+	      Hibernate: select nextval ('hibernate_sequence')
+	      Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+	      Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+    -> One to One Relationship
+        //Vehicle2.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class Vehicle{
+            @Id @GeneratedValue
+            private int vehicleId;
+            private String vehicleName;
+            public int getVehicleId(){
+              return this.vehicleId;
+            }
+            public void setVehicleId(int vehicleId){
+              this.vehicleId = vehicleId;
+            }
+            public String getVehicleName(){
+              return this.vehicleName;
+            }
+            public void setVehicleName(String vehicleName){
+              this.vehicleName = vehicleName;
+            }
+          }
+        //UserDetails2.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue
+            private int userId;
+            private String userName;
+            @OneToOne
+            @JoinColumn(name="VEHICLE_ID")
+            private Vehicle vehicle;
+            public Vehicle getVehicle(){
+              return this.vehicle;
+            }
+            public void setVehicle(Vehicle vehicle){
+              this.vehicle = vehicle
+            }
+            public String getUserName(){
+              return this.userName;
+            }
+            public void setUserName(String userName){
+              this.userName = userName;
+            }
+            public int getUserId(){
+              return this.userId;
+            }
+            public void setUserId(int userId){
+              this.userId = userId;
+            }
+          }
+        //HibernateTest2.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{
+	        public static void main(String[] args){
+	          UserDetails user = new UserDetails();
+	          user.setUserName("First User");
+  
+	          Vehicle vehicle = new Vehicle();
+	          vehicle.setVehicleName("iCar");
 
-https://www.youtube.com/watch?v=CfGDZmPj3Qw&index=1&list=PLTd5ehIj0goPcnQs34i0F-Kgp5JHX8UUv
-MAKIGAS - Hibernate
-Los Datos y la información y su uso hoy en dia.
-Serializar una serie de datos en algun tipo de archivo (formato XML/JSON)
-Guardarlos de forma serializada con algún tipo de implementación binaria particular
- - Protocol Buffer
- - Kiro
- - Java API Serializable
-Bases de Datos/Almacen de Datos
-  - JDBC API
-  - Sentencias SQL
-  - DAOS,ActiveRecord
-ORM
-  JPA: Un API que permite almacenar informació de forma persistente, simplemente etiquetando c/u
-  de los elementos que necesitamos recordar.
-  Luego necesita una libreria que implementará lo que JPA ha definido
-  HIBERNATE: Es uno de los ORM's más populares en este momento
+	          user.setVehicle(vehicle);
+  
+	          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(user);
+	          session.save(vehicle);
+	          session.getTransaction().commit();
+	          session.close();
+		//Console Output_2
+	      Hibernate: select nextval ('hibernate_sequence')
+	      Hibernate: select nextval ('hibernate_sequence')
+	      Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+	      Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+	      Hibernate: update USER_DETAILS set userName=?, vehicle_vehicleId=? where userId?
+	-> One to Many Relationship
+		-> Mapped by  (Adds a NEW COLUMN to the Vehicle table)
+		    //UserDetails3.java
+	          package org.javabrains.dto;
+	          ...
+	          @Entity
+	          public class UserDetails{
+	            @Id @GeneratedValue
+	            private int userId;
+	            private String userName;
+	            @OneToMany (mappedBy="user") //It's a reference to Vehicle.user field.
+	            private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+	            public Collection<Vehicle> getVehicleList(){
+	              return this.vehicleList;
+	            }
+	            public void setVehicle(Collection<Vehicle> vehicleList){
+	              this.vehicleList = vehicleList;
+	            }
+	            public String getUserName(){
+	              return this.userName;
+	            }
+	            public void setUserName(String userName){
+	              this.userName = userName;
+	            }
+	            public int getUserId(){
+	              return this.userId;
+	            }
+	            public void setUserId(int userId){
+	              this.userId = userId;
+	            }
+	          }
+  	        //Vehicle3.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+                @ManyToOne
+                @JoinColumn(name="USER_ID")
+                private UserDetails user;
+    
+                public UserDetails getUser(){
+                  return this.user;
+                }
+                public void setUser(UserDetails user){
+                  this.user = user;
+                }
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+  		    //Console Output_3
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into Vehicle(USER_ID, vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into Vehicle(USER_ID, vehicleName, vehicleId) values(?, ?)
+	    -> Mapping Table
+	        //Vehicle4.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+            //UserDetails4.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class UserDetails{
+                @Id @GeneratedValue
+                private int userId;
+                private String userName;
+                @OneToMany
+                @JoinTable(name="USER_VEHICLE_"
+                      ,joinColumns=@JoinColumn(name="USER_ID")
+                      ,inverseJoinColumns=@JoinColumn(name="VEHICLE_ID"))
+                private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+                public Collection<Vehicle> getListOfVehicles(){
+                  return this.vehicleList;
+                }
+                public void setVehicle(Collection<Vehicle> vehicleList){
+                  this.vehicleList = vehicleList;
+                }
+                public String getUserName(){
+                  return this.userName;
+                }
+                public void setUserName(String userName){
+                  this.userName = userName;
+                }
+                public int getUserId(){
+                  return this.userId;
+                }
+                public void setUserId(int userId){
+                  this.userId = userId;
+                }
+              }
+            //HibernateTest4.java
+              package org.javabrains.hibernate;
+              ...
+              public HibernateTest class{
+	            public static void main(String[] args){
+	              UserDetails user = new UserDetails();
+	              user.setUserName("First User");
+      
+	              Vehicle vehicle1 = new Vehicle();
+	              vehicle1.setVehicleName("Renault");
+    
+	              Vehicle vehicle2 = new Vehicle();
+	              vehicle2.setVehicleName("Chevrolet");
+    
+	              user.getListOfVehicles().add(vehicle1);
+	              user.getListOfVehicles().add(vehicle2);
+      
+	              SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	              Session session = sessionFactory.openSession();
+	              session.beginTransaction();
+	              session.save(user);
+	              session.save(vehicle1);
+	              session.save(vehicle2);
+	              session.getTransaction().commit();
+	              session.close();
+		    //Console Output_4
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_Vehicle_userId, vehicle_vehicleId) values (?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_Vehicle_userId, vehicle_vehicleId) values (?, ?)
+	        -> Table/Column/Names
+		        //UserDetails5.java
+		          package org.javabrains.dto;
+		          ...
+		          @Entity
+		          public class UserDetails{
+		            @Id @GeneratedValue
+		            private int userId;
+		            private String userName;
+		            @OneToMany
+		            @JoinTable(name="USER_VEHICLE_"
+		            		  ,joinColumns=@JoinColumn(name="USER_ID")
+		            		  ,inverseJoinColumns=@JoinColumn(name="VEHICLE_ID"))
+		            private Collection<Vehicle> vehicle = new ArrayList<Vehicle>();
+		            public Collection<Vehicle> getVehicle(){
+		              return this.vehicle;
+		            }
+		            public void setVehicle(Collection<Vehicle> vehicle){
+		              this.vehicle = vehicle
+		            }
+		            public String getUserName(){
+		              return this.userName;
+		            }
+		            public void setUserName(String userName){
+		              this.userName = userName;
+		            }
+		            public int getUserId(){
+		              return this.userId;
+		            }
+		            public void setUserId(int userId){
+		              this.userId = userId;
+		            }
+		          }
+	  		    //Console Output_5
+	              Hibernate: select nextval ('hibernate_sequence')
+	              Hibernate: select nextval ('hibernate_sequence')
+	              Hibernate: select nextval ('hibernate_sequence')
+	              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+	              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+	              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+	              Hibernate: insert into USER_VEHICLES (USER_ID, VEHICLE_ID) values (?, ?)
+	              Hibernate: insert into USER_VEHICLES (USER_ID, VEHICLE_ID) values (?, ?)
+        -> Bi-directional Relationship (OneToMany / ManyToOne)
+          You can get a Vehicle from a User user.getVehicle() and you'll get a List
+          In the same way you can get a User from a Vehicle, by using a vehicle.getUser()
+          this is very common in real world applications.
+  	        //Vehicle6.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+                @ManyToOne
+                private UserDetails user;
+    
+                public UserDetails getUser(){
+                  return this.user;
+                }
+                public void setUser(UserDetails user){
+                  this.user = user;
+                }
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+            //HibernateTest6.java
+	          package org.javabrains.hibernate;
+	          ...
+	          public HibernateTest class{
+		        public static void main(String[] args){
+		          UserDetails user = new UserDetails();
+		          user.setUserName("First User");
+	  
+		          Vehicle vehicle1 = new Vehicle();
+		          vehicle1.setVehicleName("Renault");
 
-Eclipse >New Maven Project
-  [CHECK] Create a simple project (skyp archetype selection)
-  Artifact:
-  Group Id:  org.nerfe
-  Artifact Id: hibernate-jpa
-  Version: 1.0.0-SNAPSHOT
-  Packaging: jar
-  Name:
-  Description
+		          Vehicle vehicle2 = new Vehicle();
+		          vehicle2.setVehicleName("Chevrolet");
 
-Proyect Object Model
-  //pom.xml
-	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema..."
-	  <modelVersion>4.0.0</modelVersion>
-	  <groupId>org.nerfe</groupId>
-	  <artifactId>hibernate-jpa</artifactId>
-	  <version>1.0.0-SNAPSHOT</version>
-	  <dependencies>
-	    <dependency>groupId->artifactId->versions</dependency>
-	    <dependency>groupId->artifactId->versions</dependency>
-	     hibernate-core-> org.hibernate->5.1.0.Final
-	     hibernate-entitymanager->org.hibernate->5.1.0.Final
-	     h2->com.h2database->1.4.191
-	     persistence-api->javax.persistence->1.0.2
-	  </dependencies>
-	  <build>
-		<plugins>
-	      <plugin>
-	        <groupId>org.apache.maven.plugins</groupId>
-	        <artifactId>maven-compiler-plugin</artifactId>
-	        <version>3.7.0</version>
-	        <configuration>
-	          <!-- or whatever version you use -->
-	          <source>1.8</source>
-	          <target>1.8</target>
-	        </configuration>
-	      </plugin>
-	    </plugins>
-	  </build>
-  </project>
+		          user.getVehicle().add(vehicle1);
+		          user.getVehicle().add(vehicle2);
+		          
+		          vehicle1.setUser(user);
+		          vehicle2.setUser(user);
+	  
+		          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+		          Session session = sessionFactory.openSession();
+		          session.beginTransaction();
+		          session.save(user);
+		          session.save(vehicle1);
+		          session.save(vehicle2);
+		          session.getTransaction().commit();
+		          session.close();  
+		      ...
+		    => CONVENIENCE METHOD
+		      HANDY TIP:
+		        It's useful to have a convenience method in the UserDetails or Vehicle class, it doesn't matter
+		        and it's to have an assign method, so what does is taking care of doing both, so whenever you 
+		        want to associate a user to a vehicle you will do two things.
+		        1. Add the vehicle to the user
+		        2. Add the user to the vehicle.
+    -> ManyToMany
+        -> Two Mapping Tables
+  	        //Vehicle7.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+
+                @ManyToMany
+                private Collection<UserDetails> userList = new ArrayList<>();
+                public Collection<UserDetails> getUserList(){
+                  return this.user;
+                }
+                public void setUserList(Collection<UserDetails> userList){
+                  this.userList = userList;
+                }
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+	        //UserDetails7.java
+	          package org.javabrains.dto;
+	          ...
+	          @Entity
+	          public class UserDetails{
+	            @Id @GeneratedValue
+	            private int userId;
+	            private String userName;
+
+	            @ManyToMany
+	            private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+	            public Collection<Vehicle> getVehicleList(){
+	              return this.vehicleList;
+	            }
+	            public void setVehicleList(Collection<Vehicle> vehicleList){
+	              this.vehicleList = vehicleList;
+	            }
+
+	            public String getUserName(){
+	              return this.userName;
+	            }
+	            public void setUserName(String userName){
+	              this.userName = userName;
+	            }
+	            public int getUserId(){
+	              return this.userId;
+	            }
+	            public void setUserId(int userId){
+	              this.userId = userId;
+	            }
+	          }
+            //HibernateTest7.java
+	          package org.javabrains.hibernate;
+	          ...
+	          public HibernateTest class{
+		        public static void main(String[] args){
+		          UserDetails user = new UserDetails();
+		          user.setUserName("First User");
+	  
+		          Vehicle vehicle1 = new Vehicle();
+		          vehicle1.setVehicleName("Renault");
+
+		          Vehicle vehicle2 = new Vehicle();
+		          vehicle2.setVehicleName("Chevrolet");
+
+		          user.getVehicleList().add(vehicle1);
+		          user.getVehicleList().add(vehicle2);
+		          vehicle1.getUserList().add(user);
+		          vehicle2.getUserList().add(user);
+	  
+		          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+		          Session session = sessionFactory.openSession();
+		          session.beginTransaction();
+		          session.save(user);
+		          session.save(vehicle1);
+		          session.save(vehicle2);
+		          session.getTransaction().commit();
+		          session.close();  
+		      ...
+		    //Console Output_7
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+              Hibernate: insert into Vehicle_USER_DETAILS (Vehicle_VehicleId, userList_userId) values (?, ?)
+              Hibernate: insert into Vehicle_USER_DETAILS (Vehicle_VehicleId, userList_userId) values (?, ?)
+        -> Mapped By
+			//Vehicle7.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+
+                @ManyToMany(mappedBy="vehicle")  //It references to UserDetails class & indicates it will handle the mapping
+                private Collection<UserDetails> userList = new ArrayList<>();
+                public Collection<UserDetails> getUserList(){
+                  return this.user;
+                }
+                public void setUserList(Collection<UserDetails> userList){
+                  this.userList = userList;
+                }
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+	        //UserDetails7.java
+	          package org.javabrains.dto;
+	          ...
+	          @Entity
+	          public class UserDetails{
+	            @Id @GeneratedValue
+	            private int userId;
+	            private String userName;
+
+	            @ManyToMany
+	            private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+	            public Collection<Vehicle> getVehicleList(){
+	              return this.vehicleList;
+	            }
+	            public void setVehicleList(Collection<Vehicle> vehicleList){
+	              this.vehicleList = vehicleList;
+	            }
+
+	            public String getUserName(){
+	              return this.userName;
+	            }
+	            public void setUserName(String userName){
+	              this.userName = userName;
+	            }
+	            public int getUserId(){
+	              return this.userId;
+	            }
+	            public void setUserId(int userId){
+	              this.userId = userId;
+	            }
+	          }
+            //HibernateTest8.java
+	          package org.javabrains.hibernate;
+	          ...
+	          public HibernateTest class{
+		        public static void main(String[] args){
+		          UserDetails user = new UserDetails();
+		          user.setUserName("First User");
+	  
+		          Vehicle vehicle1 = new Vehicle();
+		          vehicle1.setVehicleName("Renault");
+
+		          Vehicle vehicle2 = new Vehicle();
+		          vehicle2.setVehicleName("Chevrolet");
+
+		          user.getVehicleList().add(vehicle1);
+		          user.getVehicleList().add(vehicle2);
+		          vehicle1.getUserList().add(user);
+		          vehicle2.getUserList().add(user);
+	  
+		          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+		          Session session = sessionFactory.openSession();
+		          session.beginTransaction();
+		          session.save(user);
+		          session.save(vehicle1);
+		          session.save(vehicle2);
+		          session.getTransaction().commit();
+		          session.close();  
+		      ...
+		    //Console Output_8
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+    
+@12.Miscelaneous (NotFound/Hibernate Collections/Cascade)
+    -> NotFound
+        //UserDetails.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue
+            private int userId;
+            private String userName;
+
+            @ManyToMany
+            private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+            public Collection<Vehicle> getVehicleList(){
+              return this.vehicleList;
+            }
+            public void setVehicleList(Collection<Vehicle> vehicleList){
+              this.vehicleList = vehicleList;
+            }
+
+            public String getUserName(){
+              return this.userName;
+            }
+            public void setUserName(String userName){
+              this.userName = userName;
+            }
+            public int getUserId(){
+              return this.userId;
+            }
+            public void setUserId(int userId){
+              this.userId = userId;
+            }
+          }
+		//Vehicle.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class Vehicle{
+            @Id @GeneratedValue
+            private int vehicleId;
+            private String vehicleName;
+
+            @ManyToOne
+            @NotFound(action=NotFoundAction.IGNORE)  
+
+            private Collection<UserDetails> userList = new ArrayList<>();
+            public Collection<UserDetails> getUserList(){
+              return this.user;
+            }
+            public void setUserList(Collection<UserDetails> userList){
+              this.userList = userList;
+            }
+            public int getVehicleId(){
+              return this.vehicleId;
+            }
+            public void setVehicleId(int vehicleId){
+              this.vehicleId = vehicleId;
+            }
+            public String getVehicleName(){
+              return this.vehicleName;
+            }
+            public void setVehicleName(String vehicleName){
+              this.vehicleName = vehicleName;
+            }
+          }
+    -> Hibernate Collections
+	  - Bag Semantics - [List/ArrayList]
+	  - Bag Semantics with ID - [List/ArrayList]
+	  - List Semantic - [List/ArrayList]
+	  - Set Semantic - Set
+	  - Map Semantic - Map
+	-> Cascade
+	    -> org.hibernate.TransientObjectExtension
+	        //UserDetails1.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class UserDetails{
+                @Id @GeneratedValue
+                private int userId;
+                private String userName;
+    
+                @OneToMany
+                private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+                public Collection<Vehicle> getVehicleList(){
+                  return this.vehicleList;
+                }
+                public void setVehicleList(Collection<Vehicle> vehicleList){
+                  this.vehicleList = vehicleList;
+                }
+    
+                public String getUserName(){
+                  return this.userName;
+                }
+                public void setUserName(String userName){
+                  this.userName = userName;
+                }
+                public int getUserId(){
+                  return this.userId;
+                }
+                public void setUserId(int userId){
+                  this.userId = userId;
+                }
+              }
+            //Vehicle1.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class Vehicle{
+                @Id @GeneratedValue
+                private int vehicleId;
+                private String vehicleName;
+    
+                public int getVehicleId(){
+                  return this.vehicleId;
+                }
+                public void setVehicleId(int vehicleId){
+                  this.vehicleId = vehicleId;
+                }
+                public String getVehicleName(){
+                  return this.vehicleName;
+                }
+                public void setVehicleName(String vehicleName){
+                  this.vehicleName = vehicleName;
+                }
+              }
+            //HibernateTest1.java
+              package org.javabrains.hibernate;
+              ...
+              public HibernateTest class{
+	            public static void main(String[] args){
+	              UserDetails user = new UserDetails();
+	              user.setUserName("First User");
+      
+	              Vehicle vehicle1 = new Vehicle();
+	              vehicle1.setVehicleName("Renault");
+    
+	              Vehicle vehicle2 = new Vehicle();
+	              vehicle2.setVehicleName("Chevrolet");
+    
+	              user.getVehicleList().add(vehicle1);
+	              user.getVehicleList().add(vehicle2);
+	              //vehicle1.getUserList().add(user);
+	              //vehicle2.getUserList().add(user);
+  				    /*
+  				    -> Throws: Exception in thread "main" org.hibernate.TransientObjectExtension: 
+  				               object references an unsaved transient instance save the transient 
+  				               instance before flushing: org.javabrains.dto.Vehicle
+  				    */
+    
+	              SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	              Session session = sessionFactory.openSession();
+	              session.beginTransaction();
+	              session.save(user);
+	              session.save(vehicle1);
+	              session.save(vehicle2);
+	              session.getTransaction().commit();
+	              session.close();  
+	          ...
+	        //Console_Output_1
+	          Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+              Exception in thread "main" org.hibernate.TransientObjectExtension: 
+              object references an unsaved transient instance save the transient 
+  			  instance before flushing: org.javabrains.dto.Vehicle
+  			    at org.hibernate.engine.ForeignKeys.getEntityIdentifierIfNotUnsaved(ForeignKeys.java:243)
+  			    ...
+  
+	    -> Cascade
+	        //UserDetails2.java
+              package org.javabrains.dto;
+              ...
+              @Entity
+              public class UserDetails{
+                @Id @GeneratedValue
+                private int userId;
+                private String userName;
+    
+                @OneToMany (cascade=Cascade.PERSIST) //Cascade.ALL|class|DETACH|MERGE|PERSIST|REFRESH|REMOVE
+                private Collection<Vehicle> vehicleList = new ArrayList<Vehicle>();
+                public Collection<Vehicle> getVehicleList(){
+                  return this.vehicleList;
+                }
+                public void setVehicleList(Collection<Vehicle> vehicleList){
+                  this.vehicleList = vehicleList;
+                }
+    
+                public String getUserName(){
+                  return this.userName;
+                }
+                public void setUserName(String userName){
+                  this.userName = userName;
+                }
+                public int getUserId(){
+                  return this.userId;
+                }
+                public void setUserId(int userId){
+                  this.userId = userId;
+                }
+              }
+			//HibernateTest2.java
+              package org.javabrains.hibernate;
+              ...
+              public HibernateTest class{
+	            public static void main(String[] args){
+	              UserDetails user = new UserDetails();
+	              user.setUserName("First User");
+      
+	              Vehicle vehicle1 = new Vehicle();
+	              vehicle1.setVehicleName("Renault");
+    
+	              Vehicle vehicle2 = new Vehicle();
+	              vehicle2.setVehicleName("Chevrolet");
+    
+	              user.getVehicleList().add(vehicle1);
+	              user.getVehicleList().add(vehicle2);
+	              //vehicle1.getUserList().add(user);  //****************************************
+	              //vehicle2.getUserList().add(user);  //****************************************
+  				  /*                                   //****************************************
+  				    -> Throws: Exception in thread "main" org.hibernate.TransientObjectExtension: 
+  				               object references an unsaved transient instance save the transient 
+  				               instance before flushing: org.javabrains.dto.Vehicle
+  				               	                       //****************************************
+  				  */
+    
+	              SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	              Session session = sessionFactory.openSession();
+	              session.beginTransaction();
+	              //session.save(user);   //*****
+	              session.persist(user);  //  <<<---
+	              session.save(vehicle1);
+	              session.save(vehicle2);
+	              session.getTransaction().commit();
+	              session.close();  
+	          ...
+	        //Console_Output_2
+	          Hibernate: select nextval ('hibernate_sequence')
+              Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+              Hibernate: insert into Vehicle (vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into Vehicle (vehicleName, vehicleId) values(?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+              Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_userId, vehicle_vehicleId) values (?, ?)
+
+@13.Implementing Inheritance
+    -> Overview
+      Inheritance is one of the most important features of any object-oriented programming, this is quiteI a challenge
+      for any ORM tool to implement, which is mapping your inheritance of your classes to a relational table how would
+      the mapping happen.
+
+             Vehicle Class: ID, Name, LicenseNumber
+         Two-Wheeler Class: ID, Name, LicenseNumber, SteeringHandle
+        Four-Wheeler Class: ID, Name, LicenseNumber, SteeringWheel
+
+        //Vehicle.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class Vehicle{
+            @Id @GeneratedValue
+            private int vehicleId;
+            private String vehicleName;
+
+            public int getVehicleId(){
+              return this.vehicleId;
+            }
+            public void setVehicleId(int vehicleId){
+              this.vehicleId = vehicleId;
+            }
+            public String getVehicleName(){
+              return this.vehicleName;
+            }
+            public void setVehicleName(String vehicleName){
+              this.vehicleName = vehicleName;
+            }
+          }
+        //TwoWheeler.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class TwoWheeler extends Vehicle{
+            private String steeringHandle;
+
+            public String getSteeringHandle(){
+              return this.steeringHandle;
+            }
+            public void setSteeringHandle(String steeringHandle){
+              this.steeringHandle = steeringHandle;
+            }
+          }
+        //FourWheeler.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class FourWheeler extends Vehicle{
+            private String steeringWheel;
+
+            public String getSteeringWheel(){
+              return this.steeringWheel;
+            }
+            public void setSteeringWheel(String steeringWheel){
+              this.steeringWheel = steeringWheel;
+            }
+          }
+        //HibernateTest.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{
+	        public static void main(String[] args){
+	          Vehicle vehicle = new Vehicle();
+	          vehicle.setVehicleName("Vehicle");
+    
+	          TwoWheeler bike = new TwoWheeler();
+		      bike.setVehicleName("Bike");
+		      bike.setSteeringHandler("Bike Steering Handle");
+
+		      FourWheeler car = new FourWheeler();
+		      car.setVehicleName("Porsche");
+		      car.setSteeringWheel("Porsche Steering Wheel");
+    
+	          SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+	          Session session = sessionFactory.openSession();
+	          session.beginTransaction();
+	          session.save(vehicle);
+	          session.save(bike);
+	          session.save(car);
+	          session.getTransaction().commit();
+	          session.close();  
+	      ...
+	    //hibernate.cfg.xml
+		  <?xml version="1.0" encoding="utf-8"?>
+		  <hibernate-configuration xmlns="" xsi:schemaLocation="" xmlns:xsi="">
+		    <session-factory>
+		      <property name=""></property>
+		      ...
+		      <!-- Database connection settings -->
+			  <property name="connection.driver_class">oracle.jdbc.pool.OracleDataSource</property>
+			  <property name="connection.url">jdbc:oracle:thin:@GsgPC-19:1521:XE</property>
+			  <property name="connection.username">sys</property>
+			  <property name="connection.password">system</property>
+			  <!-- JDBC connection pool (use the built-in) -->
+			  <!-- SQL dialect -->
+			  <!-- Enable Hibernate's automatic session context management (current_session_context_class)-->
+			  <!-- Disable the second-level cache  (cache.provider_class)-->
+			  <!-- Echo all executed SQL to stdout (show_sql)-->
+			  <!-- Drop and re-create the database schema on startup (hbm2ddl.auto)-->
+			  ...
+			  <!-- Names the annotated entity class -->
+		      <mapping classes="org.javabrains.dto.UserDetails" />
+		      <mapping classes="org.javabrains.dto.Vehicle" />
+		      <mapping classes="org.javabrains.dto.TwoWheeler" />
+		      <mapping classes="org.javabrains.dto.FourWheeler" />
+		    </session-factory>
+		  </hibernate-configuration>
+        //Console_Output
+          Hibernate: select nextval ('hibernate_sequence')
+          Hibernate: select nextval ('hibernate_sequence')
+          Hibernate: select nextval ('hibernate_sequence')
+          Hibernate: insert into Vehicle(DTYPE, vehicleId, vehicleName) values(?, ?, ?)
+          Hibernate: insert into Vehicle(DTYPE, vehicleId, vehicleName, SteeringHandle) values(?, ?, ?, ?)
+          Hibernate: insert into Vehicle(DTYPE, vehicleId, vehicleName, SteeringWheel) values(?, ?, ?, ?)
+          /*
+           [dtype]     [vehicleId]  [vehicleName]  [SteeringHandle]  [SteeringWheel]
+          Vehicle          1          Car
+          TwoWheeler       2          Bike          Bike Steering
+          FourWheeler      3          Porsche                         Porshce Steering Wheel
+          */
+
+  -> Inheritance Strategy
+    Vehicle

@@ -17,30 +17,31 @@ HIBERNATE
         </session-factory>
       </hibernate-configuration>
       ...
-  Annotations1 (Entity/Table/Id/Column)
-    //UserDetails.java
-      package org.javabrains.dto;
-  
-      import javax.persistence.Entity;
-      import javax.persistence.Table;
-      import javax.persistence.Id;
-      import javax.persistence.Column;
-  
-      @Entity (name="USER_DETAILS")
-      @Table  (name="USER_DETAILS")
-      public class UserDetails{
-        @Id
-        @Column (name="USER_ID") /*Field Declaration Annotation*/
-        private int userId;
-        private String userName;
-        //@Column (name="USER_ID") /*Getter Declaration Annotation*/
-        public int getUserId(){
-        return this.userId;
+  Annotations
+    -> Entity/Table/Id/Column
+      //UserDetails.java
+        package org.javabrains.dto;
+    
+        import javax.persistence.Entity;
+        import javax.persistence.Table;
+        import javax.persistence.Id;
+        import javax.persistence.Column;
+    
+        @Entity (name="USER_DETAILS")
+        @Table  (name="USER_DETAILS")
+        public class UserDetails{
+          @Id
+          @Column (name="USER_ID") /*Field Declaration Annotation*/
+          private int userId;
+          private String userName;
+          //@Column (name="USER_ID") /*Getter Declaration Annotation*/
+          public int getUserId(){
+          return this.userId;
+          }
         }
-      }
-      ...
-  Annotations2 (Basic/Transient/Temporal/LOB)
-  Save and Get
+        ...
+    -> Basic/Transient/Temporal/LOB
+  Save and Get (SessionFactory/Session/session.save()/session.get())
     //HibernateTest
       ...
         SessionFactory sf = new Configuration().configure().buildSessionFactory();
@@ -61,78 +62,321 @@ HIBERNATE
         public class UserDetails{
           @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
           private int userId;
-  Value Types & Embedding Objects (@Embeddable/@Embedded)
-    -> Annotations Separate Columns Approach
-      //Address1.java
-        packate org.javabrains.dto;
-        import javax.persistance.Embeddable;
-        @Embeddable
-        public class Address{
-          private String street;
-          private String city;
-          private String state;
-          private String pincode;
-          ...   
-      //UserDetails1.java
+  Embedding Objects
+    Value Types        -> Separation Column Approaches
+      ->Embeddable & Embedded
+        //Address1.java
+          packate org.javabrains.dto;
+          import javax.persistance.Embeddable;
+          @Embeddable
+          public class Address{
+            private String street;
+            private String city;
+            private String state;
+            private String pincode;
+            ...   
+        //UserDetails1.java
+          package org.javabrains.dto;
+          ...
+          import javax.persistence.Embedded;
+          @Entity
+          public class UserDetails{
+            @Id
+            private int userId;
+            private String userName;
+            @Embedded
+            private Address address;
+            ...
+        //HibernateTest1.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{  
+            public static void main(String[] args){
+              UserDetails user = new UserDetails();
+              ...
+              Address addr = new Address();
+              addr.setStreet("Street Name");
+              addr.setCity("City Name");
+              
+              user.setAddres(addr);
+          ...
+      ->Column Names (AttributeOverrides & AttributeOverride)
+        //Address2.java
+          packate org.javabrains.dto;
+          import javax.persistance.Embeddable;
+          @Embeddable
+          public class Address{
+            @Column (name="STREET_NAME")
+            private String street;
+            @Column (name="CITY_NAME")
+            private String city;
+            @Column (name="STATE_NAME")
+            private String state;
+            @Column (name="PIN_CODE")
+            private String pincode;
+          ...
+        //UserDetails2.java
+          package org.javabrains.dto;
+          ...
+          import javax.persistence.Embedded;
+          import javax.persistence.AttributeOverrides;
+          import javax.persistence.AttributeOverride;
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+            private int userId;
+            private String userName;
+            @Embedded
+            @AttributeOverrides({
+               @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME"))
+              ,@AttributeOverride(name="city",   column=@Column(name="HOME_CITY_NAME"))
+              ,@AttributeOverride(name="state",  column=@Column(name="HOME_STATE_NAME"))
+              ,@AttributeOverride(name="pincode",column=@Column(name="HOME_PIN_CODE_NAME"))
+            })
+            private Address homeAddress;
+            @Embedded
+            private Address officeAddress;
+          ...
+        //HibernateTest2.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{
+            public static void main(String[] args){
+              UserDetails user = new UserDetails();
+              user.setUserId(1);
+              user.setUserName("First User");
+              
+              Address addr1 = new Address();
+              addr1.setStreet("Home Street Name");
+              addr1.setCity("Home City Name");
+              user.setHomeAddres(addr1);
+  
+              Address addr2 = new Address();
+              addr2.setStreet("Office Street Name");
+              addr2.setCity("Office City Name");
+              user.setOfficeAddres(addr2);
+          ...
+    Collections        -> We don't know the exact qty of 'Value Type' for a 'Model Object'
+      -> Embeddable & ElementCollection
+        //Address1.java
+          packate org.javabrains.dto;
+          import javax.persistance.Embeddable;
+          @Embeddable
+          public class Address{
+            @Column (name="STREET_NAME")
+            private String street;
+            @Column (name="CITY_NAME")
+            private String city;
+            @Column (name="STATE_NAME")
+            private String state;
+            @Column (name="PIN_CODE")
+            private String pincode;
+          ...
+        //UserDetails1.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+            private int userId;
+            private String userName;
+            @ElementCollection
+            private Set<Address> listOfAddresses = new HashSet<Address>();
+          ...
+        //HibernateTest1.java
+          package org.javabrains.hibernate;
+          ...
+          public HibernateTest class{
+            public static void main(String[] args){
+              UserDetails user = new UserDetails();
+              user.setUserId(1);
+              user.setUserName("First User");
+              
+              Address addr1 = new Address();
+              addr1.setStreet("First Street");
+              addr1.setCity("First City");
+              addr1.setState("First STate");
+              addr1.setPincode("100001");
+  
+              Address addr2 = new Address();
+              addr2.setStreet("Second Street");
+              addr2.setCity("Second City");
+              addr2.setState("Second State");
+              addr2.setPincode("200002");
+  
+              user.getListOfAddresses().add(addr1);
+              user.getListOfAddresses().add(addr2);
+
+              SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+              Session session = sessionFactory.openSession();
+              session.beginTransaction();
+              session.save(user);
+              session.getTransaction().commit();
+              session.close();
+          ...
+      -> Column Names (ElementCollection & JoinTable)
+        //UserDetails2.java
+          package org.javabrains.dto;
+          ...
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+            private int userId;
+            private String userName;
+            @ElementCollection
+            @JoinTable(name="USER_ADDRESS, joinColumns=@JoinColumn(name="USER_ID"))
+            private Set<Address> listOfAddresses = new HashSet<Address>();
+          ...
+      -> Adding Keys to Collections***  (GenericGenerator & CollectionId)
+        //UserDetails3.java
+          package org.javabrains.dto;
+          ...
+          //Specific to HIBERNATE = ***
+          import org.hibernate.annotations.GenericGenerator;
+          import org.hibernate.annotations.CollectionId;
+          import org.hibernate.annotations.Type;
+          @Entity
+          public class UserDetails{
+            @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+            private int userId;
+            private String userName;
+            @ElementCollection
+            @GenericGenerator(name="hilo-gen", strategy="hilo")
+            @CollectionId(columns={@Column(name="ADDRESS_ID")}, generator="hilo-gen", type=@Type(type="long"))
+            private Collection<Address> listOfAddresses = new ArrayList<Address>();
+      -> Proxy Objects & Fetch Types    (@ElementCollection (fetch=FetchType.EAGER|LAZY))
+        ...
+          session.openFactory();
+          user = (UserDetails)session.get(UserDetails.class, 1);
+          session.close();
+          System.out.println(user.getListOfAddreses().size()); 
+            //FetchType.Eager will ouput the actual size
+            //FetchType.Lazy will throws the Exception
+    OneToOne           -> Entity Inside other Entity
+      //Vehicle.java
         package org.javabrains.dto;
         ...
-        import javax.persistence.Embedded;
+        @Entity
+        public class Vehicle{
+          @Id @GeneratedValue
+          private int vehicleId;
+          private String vehicleName;
+        ...
+      //UserDetails.java
+        package org.javabrains.dto;
+        ...
         @Entity
         public class UserDetails{
-          @Id
+          @Id @GeneratedValue
           private int userId;
           private String userName;
-          @Embedded
-          private Address address;
-          ...
-      //HibernateTest1.java
+          @OneToOne
+          @JoinColumn(name="VEHICLE_ID")
+          private Vehicle vehicle;
+        ...
+      //HibernateTest.java
         package org.javabrains.hibernate;
         ...
-        public HibernateTest class{  
-          public static void main(String[] args){
-            UserDetails user = new UserDetails();
-            ...
-            Address addr = new Address();
-            addr.setStreet("Street Name");
-            addr.setCity("City Name");
-            
-            user.setAddres(addr);
+        public HibernateTest class{
+        public static void main(String[] args){
+          UserDetails user = new UserDetails();
+          user.setUserName("First User");
+  
+          Vehicle vehicle1 = new Vehicle();
+          vehicle1.setVehicleName("Renault");
+
+          user.setVehicle(vehicle1);
+
+
+          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+          Session session = sessionFactory.openSession();
+          session.beginTransaction();
+          session.save(user);
+          session.save(vehicle1);
+          session.getTransaction().commit();
+          session.close();
         ...
-    -> Column Names for Separate Columns Approach    
-      //Address2.java
-        packate org.javabrains.dto;
-        import javax.persistance.Embeddable;
-        @Embeddable
-        public class Address{
-          @Column (name="STREET_NAME")
-          private String street;
-          @Column (name="CITY_NAME")
-          private String city;
-          @Column (name="STATE_NAME")
-          private String state;
-          @Column (name="PIN_CODE")
-          private String pincode;
-        ...
-      //UserDetails2.java
+      //Console Output
+        Hibernate: select nextval ('hibernate_sequence')
+        Hibernate: select nextval ('hibernate_sequence')
+        Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+        Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+        Hibernate: update USER_DETAILS set userName=?, vehicle_vehicleId=? where userId?
+    OneToMany
+      //Vehicle.java
         package org.javabrains.dto;
         ...
-        import javax.persistence.Embedded;
-        import javax.persistence.AttributeOverrides;
-        import javax.persistence.AttributeOverride;
+        @Entity
+        public class Vehicle{
+          @Id @GeneratedValue
+          private int vehicleId;
+          private String vehicleName;
+        ...
+      //UserDetails.java
+        package org.javabrains.dto;
+        ...
         @Entity
         public class UserDetails{
-          @Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+          @Id @GeneratedValue
           private int userId;
           private String userName;
-          @Embedded
-          @AttributeOverrides({
-             @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME"))
-            ,@AttributeOverride(name="city",   column=@Column(name="HOME_CITY_NAME"))
-            ,@AttributeOverride(name="state",  column=@Column(name="HOME_STATE_NAME"))
-            ,@AttributeOverride(name="pincode",column=@Column(name="HOME_PIN_CODE_NAME"))
-          })
-          private Address homeAddress;
-          @Embedded
-          private Address officeAddress;
+          @OneToMany
+          @JoinColumn(name="VEHICLE_ID")
+          private Vehicle vehicle;
         ...
-      //
+      //HibernateTest.java
+        package org.javabrains.hibernate;
+        ...
+        public HibernateTest class{
+        public static void main(String[] args){
+          UserDetails user = new UserDetails();
+          user.setUserName("First User");
+  
+          Vehicle vehicle1 = new Vehicle();
+          vehicle1.setVehicleName("Renault");
+          Vehicle vehicle2 = new Vehicle();
+          vehicle2.setVehicleName("Chevrolet");
+
+          user.getVehicle().add(vehicle1);
+          user.getVehicle().add(vehicle2);
+
+          SessionFactory sessionFactory = new Configuration.configure().buildSessionFactory();
+          Session session = sessionFactory.openSession();
+          session.beginTransaction();
+          session.save(user);
+          session.save(vehicle1);
+          session.save(vehicle2);
+          session.getTransaction().commit();
+          session.close();
+        ...
+      //Console Output
+        Hibernate: select nextval ('hibernate_sequence')
+        Hibernate: select nextval ('hibernate_sequence')
+        Hibernate: select nextval ('hibernate_sequence')
+        Hibernate: insert into USER_DETAILS(userName, userId) values(?, ?)
+        Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+        Hibernate: insert into Vehicle(vehicleName, vehicleId) values(?, ?)
+        Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_Vehicle_userId, vehicle_vehicleId) values (?, ?)
+        Hibernate: insert into USER_DETAILS_Vehicle (USER_DETAILS_Vehicle_userId, vehicle_vehicleId) values (?, ?)
+>>>>>>>>>>>>>>>
+@Entity
+@Id @GeneratedValue(strategy=GenerationType.Auto|Identity|Sequence|Table)
+@Column (name="") Field Selector|Getter Selector Annotation
+@Embeddable
+@Embedded
+  @AttributeOverrides({
+    @AttributeOverride(name="street", column=@Column(name="HOME_STREET_NAME"))
+   ,@AttributeOverride(name="city", column=@Column(name="HOME_CITY_NAME"))
+  })
+  @EmbeddedId
+@ElementCollection (fetch=FetchType.EAGER|LAZY)
+  @JoinTable(name="USER_ADDRESS",JoinColumns=@JoinColumn(name="USER_ID"))
+  ***@GenericGenerator(name="hilo-gen", strategy="hilo")
+  ***@CollectionId(columns={@Column(name="ADDRESS_ID")}, generator="hilo-gen", type=@Type(type="long"))
+@OneToOne
+  @JoinColumn(name="VEHICLE_ID")
+@OneToMany
+  @JoinTable(name="USER_VEHICLE_"
+            ,joinColumns=@JoinColumn(name="USER_ID")
+            ,inverseJoinColumns=@JoinColumn(name="VEHICLE_ID"))
+<<<<<<<<<<<<<<<
